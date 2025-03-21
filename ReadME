@@ -1,0 +1,22 @@
+Start file for repository setup
+The Open meteo api link:
+
+https://open-meteo.com/en/docs/historical-forecast-api?latitude=53.94807&longitude=-1.02556&start_date=2021-03-23&end_date=2023-12-31&hourly=temperature_2m,relative_humidity_2m,precipitation,surface_pressure,cloud_cover,wind_speed_10m,weather_code&tilt=20&azimuth=-5&models=best_match
+
+
+start 2021-03-23
+end 2023-03-23T01:00
+
+co ords of solar: 53.94807972383912, -1.0255675170418497
+
+PVGIS variable:
+start; 2021
+end;2023
+fixed
+20 slope
+-5 azimuth
+yes to pv power
+crystaline sylican
+118 kwp peak
+14 loss
+yes to radiation components
