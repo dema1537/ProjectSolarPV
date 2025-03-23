@@ -94,7 +94,7 @@ X_test_flat = X_test.reshape((X_test.shape[0] * X_test.shape[1], X_test.shape[2]
 X_day_flat = cloudyDayTestX.reshape((cloudyDayTestX.shape[0] * cloudyDayTestX.shape[1], cloudyDayTestX.shape[2]))
 
 X_train_scaled_flat = scaler_X.fit_transform(X_train_flat)
-X_val_scaled_flat = scaler_X.fit_transform(X_val_flat)
+X_val_scaled_flat = scaler_X.transform(X_val_flat)
 X_test_scaled_flat = scaler_X.transform(X_test_flat)
 X_day_flat_flat = scaler_X.transform(X_day_flat)
 
@@ -111,30 +111,19 @@ y_day_scaled = scaler_y.transform(cloudyDayTesty.reshape(-1,1))
 
 batchSize = 64
 
-class CNN(nn.Module):
+class LSTM(nn.Module):
 
     def __init__(self):
         super().__init__()
         self.feature = nn.Sequential(
 
-            nn.Conv1d(in_channels=5, out_channels=16, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
+            nn.LSTM(15, 64, batch_first=True, dropout=0.2),
+            nn.Tanh(),
 
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
+            nn.LSTM(64, 32, batch_first=True, dropout=0.2),
+            nn.Tanh(),
 
-
-            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
-
-
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
-
+            nn.LSTM(32,16, batch_first=True),
 
             nn.Flatten(),
 
@@ -146,25 +135,28 @@ class CNN(nn.Module):
 
 
             #1
-            nn.Linear(64, 32),
+            nn.Linear(16 * 5, 16 * 5),
             nn.ReLU(),
-            nn.Dropout(0.5),
+            nn.Linear(16 * 5, 1),
+            
 
-
-            #2
-            nn.Linear(32, 1),
-            nn.ReLU()
+            
 
         )
 
     def forward(self, x):
-        features = self.feature(x)
+        lstm1_out, _ = self.feature[0](x)
+        tanh1_out = self.feature[1](lstm1_out)
+        lstm2_out, _ = self.feature[2](tanh1_out)
+        tanh2_out = self.feature[3](lstm2_out)
+        lstm3_out, _ = self.feature[4](tanh2_out)
+        flattened_out = self.feature[5](lstm3_out)
+        return self.classify(flattened_out)
+        
 
-        return self.classify(features)
 
 
-
-classifier = CNN().to(device)
+classifier = LSTM().to(device)
 
 lossFunction = nn.MSELoss()
 
@@ -175,10 +167,8 @@ y_train_tensor = torch.tensor(y_train_scaled, dtype=torch.float32)
 X_val_tensor = torch.tensor(X_val_scaled, dtype=torch.float32)
 y_val_tensor = torch.tensor(y_val_scaled, dtype=torch.float32)
 
-
 batch_size = 256
 num_samples = X_train_tensor.shape[0]
-
 
 history = {
     'epoch': [],
@@ -200,6 +190,7 @@ for epoch in range(epochs):
 
     train_losses, train_rmses, train_mapes = [], [], []
 
+
     for i in range(0, num_samples, batch_size):
         X_batch = X_train_tensor[i:i + batch_size]
         y_batch = y_train_tensor[i:i + batch_size]
@@ -213,7 +204,6 @@ for epoch in range(epochs):
         
         epoch_loss += loss.item()
 
-        # Convert predictions and targets back to original scale
         predictions_numpy = predictions.detach().cpu().numpy().reshape(-1, 1)
         y_batch_numpy = y_batch.detach().cpu().numpy().reshape(-1, 1)
 
@@ -223,19 +213,16 @@ for epoch in range(epochs):
         predictions_original = predictions_numpy.flatten()
         y_batch_original = y_batch_numpy.flatten()
 
-        # Compute RMSE and MAPE
         rmse = np.sqrt(np.mean((predictions_original - y_batch_original) ** 2))
         
-        # Avoid division by very small numbers
         mape = np.mean(np.abs((predictions_original - y_batch_original) / (y_batch_original + 1))) * 100
 
         total_rmse += rmse
         total_mape += mape
         num_batches += 1
+
+
     
-
-
-
     classifier.eval()
     val_loss = 0
     val_rmse = 0
@@ -277,10 +264,9 @@ for epoch in range(epochs):
     history["val_rmse"].append(avg_val_rmse)
     history["val_mape"].append(avg_val_mape)
 
-
-
     print(f"Epoch {epoch+1}/{epochs}, Train Loss: {epoch_loss/num_samples:.6f}, Train RMSE: {avg_rmse:.4f}, Train MAPE: {avg_mape:.2f}% | "
           f"Val Loss: {avg_val_loss:.6f}, Val RMSE: {avg_val_rmse:.4f}, Val MAPE: {avg_val_mape:.2f}%")
+
 
 # epochs = 25
 # for epoch in range(epochs):
@@ -322,7 +308,7 @@ for epoch in range(epochs):
 
 X_train_scaled = torch.tensor(X_train_scaled, dtype=torch.float32, requires_grad=False)
 
-train_predictions_scaled = classifier(X_train_scaled).flatten()
+train_predictions_scaled = torch.clamp(classifier(X_train_scaled).flatten(), min=0)
 train_predictions_numpy = train_predictions_scaled.detach().cpu().numpy()
 train_predictions = scaler_y.inverse_transform(train_predictions_numpy.reshape(-1, 1)).flatten()
 
@@ -331,7 +317,7 @@ pd.set_option('display.max_colwidth', 500)
 print(train_results)
 
 X_test_scaled = torch.tensor(X_test_scaled, dtype=torch.float32, requires_grad=False)
-test_predictions_scaled = classifier(X_test_scaled).flatten()
+test_predictions_scaled = torch.clamp(classifier(X_test_scaled).flatten(), min=0)
 test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
 test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
 
@@ -340,16 +326,8 @@ plt.plot(test_predictions, label='Predicted')
 plt.legend()
 plt.show()
 
-X_day_scaled = torch.tensor(X_day_scaled, dtype=torch.float32, requires_grad=False)
-test_predictions_scaled = classifier(X_day_scaled).flatten()
-test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
-test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
 
-plt.plot(cloudyDayTesty, label='Actual')
-plt.plot(test_predictions, label='Predicted')
-plt.legend()
-plt.show()
-
+#The epoch graphs#
 
 epochs_range = range(1, epochs + 1)
 

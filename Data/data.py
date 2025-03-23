@@ -27,13 +27,39 @@ df_radiance.insert(0, 'ID', range(1, len(df_radiance) + 1))
 df_merged = pd.merge(df_weather, df_radiance, on='ID')
 
 df_merged.drop(columns=['ID'], inplace=True)
+
+df_cloudy = []
+for j in range(0, len(df_merged), 24):
+
+    temp = []
+    total = 0
+    for k in range(0, 24):
+        temp.append(df_merged.iloc[j+k])
+        cloud_cover = df_merged.iloc[j+k]['cloud_cover (%)']
+        if not pd.isna(cloud_cover):
+            total = total + int(cloud_cover)
+
+
+    if total <= 2000:  
+        df_cloudy.append(temp)
+
+
+df_cloudy = (df_cloudy[551:])
+
+
+
 df_merged.drop(columns=['time'], inplace=True)
 
-df_merged.dropna(inplace=True)
+# for df in df_cloudy:
+#     df.drop(columns=['time'], inplace=True)
 
+df_merged.dropna(inplace=True)
 df_np = df_merged[:].to_numpy()
 X = []
 y = []
+
+Xcloudy = []
+ycloudy = []
 
 size = 5
 
@@ -60,6 +86,23 @@ for i in range(len(df_np) - size):
     output = output[7]
     y.append(output)
 
+temp_df_cloudy = []
+
+# for j in range(0,25):
+
+#     for i in range(len(df_cloudy[j]) - 1 - size):
+
+#         temp = pd.DataFrame(df_cloudy[j]).drop(columns=['time'])
+        
+#         temp_df_cloudy.append(temp)
+#         # temp_df_cloudy[j].drop(columns=['time'], inplace=True)
+
+#         input = [a.copy() for a in temp_df_cloudy[j][i:i + size]]
+#         input[i][size - 1][7] = 0
+#         Xcloudy.append(input)
+#         output = df_cloudy[j].iloc[i + size - 1, 7]
+#         ycloudy.append(output)
+
 
 X1 = np.array(X)
 y1 = np.array(y)
@@ -67,10 +110,9 @@ y1 = np.array(y)
 split = int(len(X) * 0.8)
 X_train, X_test = X[:split], X[split:]
 y_train, y_test = y[:split], y[split:]
-dayTestX = X[split+110:split+135]
-dayTesty = y[split+110:split+135]
+dayTestX = Xcloudy
+dayTesty = ycloudy
 
-df_cloudy = df_weather[(df_weather['cloud_cover (%)'] >= 10) & (df_weather['cloud_cover (%)'] <= 90)]
 
 df_cloudy = pd.merge(df_cloudy, df_radiance, on='ID')
 

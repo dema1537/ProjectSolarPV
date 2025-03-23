@@ -27,6 +27,19 @@ df_radiance.insert(0, 'ID', range(1, len(df_radiance) + 1))
 df_merged = pd.merge(df_weather, df_radiance, on='ID')
 
 df_merged.drop(columns=['ID'], inplace=True)
+
+size = 5
+
+df_cloudy = []
+
+
+# for j in range(len(df_merged), step=24):
+    
+#     for k in range(0, 24):
+#         if df_merged['cloud_cover ']
+
+
+
 df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
@@ -35,7 +48,6 @@ df_np = df_merged[:].to_numpy()
 X = []
 y = []
 
-size = 5
 
 # for i in range(len(df_np)-size):
 #     input = [a.copy() for a in df_np[i:i + size]]
@@ -68,14 +80,14 @@ y_train, y_test = y[:split], y[split:]
 dayTestX = X[split+110:split+135]
 dayTesty = y[split+110:split+135]
 
-df_cloudy = df_weather[(df_weather['cloud_cover'] >= 10) & (df_weather['cloud_cover'] <= 90)]
+# df_cloudy = df_weather[(df_weather['cloud_cover'] >= 10) & (df_weather['cloud_cover'] <= 90)]
 
-df_cloudy = pd.merge(df_cloudy, df_radiance, on='ID')
+#df_cloudy = pd.merge(df_cloudy, df_radiance, on='ID')
 
 
 
 # Reset index for convenience (optional)
-df_cloudy.reset_index(drop=True, inplace=True)
+#df_cloudy.reset_index(drop=True, inplace=True)
 
 X_train = np.array(X_train)
 X_test = np.array(X_test)
@@ -122,14 +134,16 @@ model1.compile(loss=MeanSquaredError(), optimizer=Adam(learning_rate=0.0001), me
 model1.fit(X_train_scaled, y_train_scaled, validation_data=(X_test_scaled, y_test_scaled), epochs=25, batch_size=16)
 
 train_predictions_scaled = model1.predict(X_train_scaled).flatten()
-train_predictions = scaler_y.inverse_transform(train_predictions_scaled.reshape(-1,1)).flatten()
+#train_predictions = scaler_y.inverse_transform(train_predictions_scaled.reshape(-1,1)).flatten()
+train_predictions = (train_predictions_scaled.reshape(-1,1)).flatten()
 
 train_results = pd.DataFrame(data={'Train Predictions': train_predictions, 'Actuals': y_train})
 pd.set_option('display.max_colwidth', 500)
 print(train_results)
 
 test_predictions_scaled = model1.predict(X_test_scaled).flatten()
-test_predictions = scaler_y.inverse_transform(test_predictions_scaled.reshape(-1,1)).flatten()
+#test_predictions = scaler_y.inverse_transform(test_predictions_scaled.reshape(-1,1)).flatten()
+test_predictions = (test_predictions_scaled.reshape(-1,1)).flatten()
 
 # Plot results
 plt.plot(y_test, label='Actual')
@@ -138,7 +152,8 @@ plt.legend()
 plt.show()
 
 test_predictions_scaled = model1.predict(X_day_flat).flatten()
-test_predictions = scaler_y.inverse_transform(test_predictions_scaled.reshape(-1,1)).flatten()
+#test_predictions = scaler_y.inverse_transform(test_predictions_scaled.reshape(-1,1)).flatten()
+test_predictions = (test_predictions_scaled.reshape(-1,1)).flatten()
 
 plt.plot(dayTesty, label='Actual')
 plt.plot(test_predictions, label='Predicted')
