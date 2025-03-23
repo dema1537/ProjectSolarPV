@@ -2,25 +2,12 @@ import torch
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import Adam
-
-import scipy
-import matplotlib.pyplot as plt
-import time
-
-from torch.utils.data import DataLoader
-from sklearn.metrics import precision_score
-
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import numpy as np
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-import tensorflow as tf
-import torch.optim as optim
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
-
-
-filename = "CNN.pth.tar"
 device = "cpu"
 
 df_weather = pd.read_csv("Data\OpenMeteoData.csv")
@@ -45,18 +32,10 @@ df_merged.dropna(inplace=True)
 df_np = df_merged[:].to_numpy()
 X = df_np
 
-
-
-split_train = int(len(X) * 0.7)  
+split_train = int(len(X) * 0.7)
 split_val = int(len(X) * 0.85)
 
 X_train, X_val, X_test = X[:split_train], X[split_train:split_val], X[split_val:]
-
-
-
-
-
-
 
 # Sequence Data Preparation
 SEQUENCE_SIZE = 5
@@ -65,10 +44,9 @@ def to_sequences(seq_size, obs):
     x = []
     y = []
     for i in range(len(obs) - seq_size):
-        window = [row[:].copy() for row in obs[i:(i + seq_size)]] 
+        window = [row[:].copy() for row in obs[i:(i + seq_size)]]
         after_window = obs[i + seq_size][7]
         y.append(after_window)
-
 
         window[-1][7] = 0.0
         x.append(window)
@@ -77,9 +55,6 @@ def to_sequences(seq_size, obs):
 xtrain, ytrain = to_sequences(SEQUENCE_SIZE, X_train)
 xtest, ytest = to_sequences(SEQUENCE_SIZE, X_test)
 xval, yval = to_sequences(SEQUENCE_SIZE, X_val)
-
-scaler_x = StandardScaler()
-scaler_y = StandardScaler()
 
 # Store original shape before reshaping
 xtrain_shape = xtrain.shape
@@ -102,13 +77,29 @@ xtrain = xtrain.reshape(xtrain_shape)
 xval = xval.reshape(xval_shape)
 xtest = xtest.reshape(xtest_shape)
 
+ytrain_shape = ytrain.shape
+yval_shape = yval.shape
+ytest_shape = ytest.shape
+
 ytrain = ytrain.reshape(-1, 1)
-yval = yval.reshape(-1, 1) 
+yval = yval.reshape(-1, 1)
 ytest = ytest.reshape(-1, 1)
 
+scaler_y = StandardScaler()
 ytrain = scaler_y.fit_transform(ytrain)
 ytest = scaler_y.transform(ytest)
 yval = scaler_y.transform(yval)
+
+
+ytrain = ytrain.reshape(ytrain_shape)
+yval = yval.reshape(yval_shape)
+ytest = ytest.reshape(ytest_shape)
+
+ytrain_shape = ytrain.shape
+yval_shape = yval.shape
+ytest_shape = ytest.shape
+
+
 
 x_train_tensor = torch.tensor(xtrain, dtype=torch.float32)
 y_train_tensor = torch.tensor(ytrain, dtype=torch.float32)
@@ -121,297 +112,13 @@ y_val_tensor = torch.tensor(yval, dtype=torch.float32)
 
 print(x_train_tensor.shape)
 print(y_train_tensor.shape)
+
 # Setup data loaders for batch
 train_dataset = TensorDataset(x_train_tensor, y_train_tensor)
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
 
 test_dataset = TensorDataset(x_test_tensor, y_test_tensor)
 test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
-
-
-
-
-
-
-# size = 5
-
-
-# # for i in range(len(df_np) - size):
-# #     input = [a.copy() for a in df_np[i:i + size]]
-# #     input[size - 1][7] = 0
-# #     X.append(input)
-# #     output = df_np[i + size - 1]
-# #     output = output[7]
-# #     y.append(output)
-
-
-
-# split_train = int(len(X) * 0.7)  
-# split_val = int(len(X) * 0.85)
-
-# X_train, X_val, X_test = X[:split_train], X[split_train:split_val], X[split_val:]
-# y_train, y_val, y_test = y[:split_train], y[split_train:split_val], y[split_val:]
-# cloudyDayTestX = []
-# cloudyDayTesty = []
-
-# cloudy_indices = df_merged[(df_merged['cloud_cover (%)'] > 20) & (df_merged['cloud_cover (%)'] < 90)].index
-
-
-# for i in range(0, len(X_test)):
-    
-#     if((X_test[i][4][4] > 20) & (X_test[i][4][4] < 90)):
-#         cloudyDayTestX.append(X_test[i])
-#         cloudyDayTesty.append(y_test[i])
-
-# X_train = np.array(X_train)
-# X_val = np.array(X_val)
-# X_test = np.array(X_test)
-# cloudyDayTestX = np.array(cloudyDayTestX)
-
-# y_train = np.array(y_train)
-# y_val = np.array(y_val)
-# y_test = np.array(y_test)
-# cloudyDayTesty = np.array(cloudyDayTesty)
-
-# print("X_train shape:", X_train.shape)
-# print("y_train shape:", y_train.shape)
-
-# scaler_X = MinMaxScaler()
-# X_train_flat = X_train.reshape((X_train.shape[0] * X_train.shape[1], X_train.shape[2]))
-# X_val_flat = X_val.reshape((X_val.shape[0] * X_val.shape[1], X_val.shape[2]))
-# X_test_flat = X_test.reshape((X_test.shape[0] * X_test.shape[1], X_test.shape[2]))
-# X_day_flat = cloudyDayTestX.reshape((cloudyDayTestX.shape[0] * cloudyDayTestX.shape[1], cloudyDayTestX.shape[2]))
-
-# X_train_scaled_flat = scaler_X.fit_transform(X_train_flat)
-# X_val_scaled_flat = scaler_X.fit_transform(X_val_flat)
-# X_test_scaled_flat = scaler_X.transform(X_test_flat)
-# X_day_flat_flat = scaler_X.transform(X_day_flat)
-
-# X_train_scaled = X_train_scaled_flat.reshape((X_train.shape[0], X_train.shape[1], X_train.shape[2]))
-# X_val_scaled = X_val_scaled_flat.reshape((X_val.shape[0], X_val.shape[1], X_val.shape[2]))
-# X_test_scaled = X_test_scaled_flat.reshape((X_test.shape[0], X_test.shape[1], X_test.shape[2]))
-# X_day_scaled = X_day_flat_flat.reshape((cloudyDayTestX.shape[0], cloudyDayTestX.shape[1], cloudyDayTestX.shape[2]))
-
-# scaler_y = MinMaxScaler()
-# y_train_scaled = scaler_y.fit_transform(y_train.reshape(-1,1))
-# y_val_scaled = scaler_y.fit_transform(y_val.reshape(-1,1))
-# y_test_scaled = scaler_y.transform(y_test.reshape(-1,1))
-# y_day_scaled = scaler_y.transform(cloudyDayTesty.reshape(-1,1))
-
-
-
-
-# batchSize = 64
-
-# class Transformer(nn.Module):
-
-#     def __init__(self):
-#         super().__init__()
-#         self.feature = nn.Sequential(
-
-#             nn.Conv1d(in_channels=5, out_channels=16, kernel_size=3),
-#             nn.Dropout(0.5),
-#             nn.BatchNorm1d(16),
-#             nn.ReLU(),
-
-#             nn.MaxPool1d(kernel_size=2, stride=2),
-#             nn.ReLU(),
-
-
-#             nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3),
-#             nn.Dropout(0.5),
-#             nn.BatchNorm1d(32),
-#             nn.ReLU(),
-
-
-#             nn.MaxPool1d(kernel_size=2, stride=2),
-#             nn.ReLU(),
-
-
-#             nn.Flatten(),
-
-            
-#         )
-
-
-#         self.classify = nn.Sequential(
-
-
-#             #1
-#             nn.Linear(64, 32),
-#             nn.ReLU(),
-#             nn.Dropout(0.5),
-
-
-#             #2
-#             nn.Linear(32, 1),
-#             nn.ReLU()
-
-#         )
-
-#     def forward(self, x):
-#         features = self.feature(x)
-
-#         return self.classify(features)
-
-
-
-# classifier = Transformer().to(device)
-
-# lossFunction = nn.MSELoss()
-
-# optimiser = optim.Adam(classifier.parameters(), lr=1e-4, weight_decay=1e-3)
-
-# X_train_tensor = torch.tensor(X_train_scaled, dtype=torch.float32)
-# y_train_tensor = torch.tensor(y_train_scaled, dtype=torch.float32)
-# X_val_tensor = torch.tensor(X_val_scaled, dtype=torch.float32)
-# y_val_tensor = torch.tensor(y_val_scaled, dtype=torch.float32)
-
-
-# batch_size = 256
-# num_samples = X_train_tensor.shape[0]
-
-
-# history = {
-#     'epoch': [],
-#     'train_loss': [],
-#     'val_loss': [],
-#     'train_rmse': [],
-#     'val_rmse': [],
-#     'train_mape': [],
-#     'val_mape': []
-# }
-
-# epochs = 25
-# for epoch in range(epochs):
-#     classifier.train()  
-#     epoch_loss = 0
-#     total_rmse = 0
-#     total_mape = 0
-#     num_batches = 0
-
-#     train_losses, train_rmses, train_mapes = [], [], []
-
-#     for i in range(0, num_samples, batch_size):
-#         X_batch = X_train_tensor[i:i + batch_size]
-#         y_batch = y_train_tensor[i:i + batch_size]
-
-#         optimiser.zero_grad()  
-#         predictions = classifier(X_batch).flatten()  
-
-#         loss = lossFunction(predictions, y_batch.flatten()) 
-#         loss.backward() 
-#         optimiser.step()
-        
-#         epoch_loss += loss.item()
-
-#         # Convert predictions and targets back to original scale
-#         predictions_numpy = predictions.detach().cpu().numpy().reshape(-1, 1)
-#         y_batch_numpy = y_batch.detach().cpu().numpy().reshape(-1, 1)
-
-#         # predictions_original = scaler_y.inverse_transform(predictions_numpy).flatten()
-#         # y_batch_original = scaler_y.inverse_transform(y_batch_numpy).flatten()
-
-#         predictions_original = predictions_numpy.flatten()
-#         y_batch_original = y_batch_numpy.flatten()
-
-#         # Compute RMSE and MAPE
-#         rmse = np.sqrt(np.mean((predictions_original - y_batch_original) ** 2))
-        
-#         # Avoid division by very small numbers
-#         mape = np.mean(np.abs((predictions_original - y_batch_original) / (y_batch_original + 1))) * 100
-
-#         total_rmse += rmse
-#         total_mape += mape
-#         num_batches += 1
-    
-
-
-
-#     classifier.eval()
-#     val_loss = 0
-#     val_rmse = 0
-#     val_mape = 0
-#     val_batches = 0
-
-#     with torch.no_grad():  
-#         for i in range(0, len(X_val_tensor), batch_size):
-#             X_val_batch = X_val_tensor[i:i + batch_size]
-#             y_val_batch = y_val_tensor[i:i + batch_size]
-
-#             val_predictions = classifier(X_val_batch).flatten()
-#             loss = lossFunction(val_predictions, y_val_batch.flatten())
-#             val_loss += loss.item()
-
-#             val_predictions_numpy = val_predictions.cpu().numpy().reshape(-1, 1)
-#             y_val_numpy = y_val_batch.cpu().numpy().reshape(-1, 1)
-
-#             val_predictions_original = val_predictions_numpy.flatten()
-#             y_val_original = y_val_numpy.flatten()
-
-#             val_rmse += np.sqrt(np.mean((val_predictions_original - y_val_original) ** 2))
-#             val_mape += np.mean(np.abs((val_predictions_original - y_val_original) / (y_val_original + 1))) * 100 
-
-#             val_batches += 1
-
-#     avg_rmse = total_rmse / num_batches
-#     avg_mape = total_mape / num_batches
-
-#     avg_val_rmse = val_rmse / val_batches
-#     avg_val_loss = val_loss / val_batches
-#     avg_val_mape = val_mape / val_batches
-
-#     history["train_loss"].append(epoch_loss/num_samples)
-#     history["train_rmse"].append(avg_rmse)
-#     history["train_mape"].append(avg_mape)
-
-#     history["val_loss"].append(avg_val_loss)
-#     history["val_rmse"].append(avg_val_rmse)
-#     history["val_mape"].append(avg_val_mape)
-
-
-
-#     print(f"Epoch {epoch+1}/{epochs}, Train Loss: {epoch_loss/num_samples:.6f}, Train RMSE: {avg_rmse:.4f}, Train MAPE: {avg_mape:.2f}% | "
-#           f"Val Loss: {avg_val_loss:.6f}, Val RMSE: {avg_val_rmse:.4f}, Val MAPE: {avg_val_mape:.2f}%")
-
-# # epochs = 25
-# # for epoch in range(epochs):
-# #     classifier.train()  
-# #     epoch_loss = 0
-# #     total_rmse = 0
-# #     total_mape = 0
-# #     num_batches = 0
-
-# #     for i in range(0, num_samples, batch_size):
-# #         X_batch = X_train_tensor[i:i + batch_size]
-# #         y_batch = y_train_tensor[i:i + batch_size]
-
-# #         optimiser.zero_grad()  
-# #         predictions = classifier(X_batch) 
-
-# #         loss = lossFunction(predictions, y_batch) 
-# #         loss.backward() 
-# #         optimiser.step()
-# #         epoch_loss += loss.item()
-
-# #         predictions_numpy = predictions.detach().cpu().numpy()
-# #         y_batch_numpy = y_batch.detach().cpu().numpy()
-# #         predictions_original = scaler_y.inverse_transform(predictions_numpy.reshape(-1, 1)).flatten()
-# #         y_batch_original = scaler_y.inverse_transform(y_batch_numpy.reshape(-1, 1)).flatten()
-
-# #         rmse = np.sqrt(np.mean((predictions_original - y_batch_original) ** 2))
-# #         mape = np.mean(np.abs((predictions_original - y_batch_original) / (y_batch_original + 1e-8))) * 100  # Avoid division by zero
-
-# #         total_rmse += rmse
-# #         total_mape += mape
-# #         num_batches += 1
-
-# #     avg_rmse = total_rmse / num_batches
-# #     avg_mape = total_mape / num_batches
-
-# #     print(f"Epoch {epoch+1}/{epochs}, Loss: {epoch_loss/num_samples:.6f}, RMSE: {avg_rmse:.4f}, MAPE: {avg_mape:.2f}%")
-
-
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=17028):
@@ -429,12 +136,10 @@ class PositionalEncoding(nn.Module):
     def forward(self, x):
         x = x + self.pe[:x.size(0), :]
         return self.dropout(x)
-    
 
 class TransformerModel(nn.Module):
-    def __init__(self, input_dim=15, d_model=64, nhead=4, num_layers=2, dropout=0.2):
+    def __init__(self, input_dim=15, d_model=64, nhead=4, num_layers=3, dropout=0.2):
         super(TransformerModel, self).__init__()
-
         self.encoder = nn.Linear(input_dim, d_model)
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
@@ -455,10 +160,6 @@ lossFunction = nn.MSELoss()
 optimizer = torch.optim.Adam(classifier.parameters(), lr=0.001)
 scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=3, verbose=True)
 
-
-early_stop_count = 0
-min_val_loss = float('inf')
-
 history = {
     'epoch': [],
     'train_loss': [],
@@ -469,10 +170,8 @@ history = {
     'val_mape': []
 }
 
-epochs = 100
+epochs = 10
 for epoch in range(epochs):
-
-
     classifier.train()
     epoch_loss = 0
     total_rmse = 0
@@ -500,9 +199,9 @@ for epoch in range(epochs):
         loss.backward() 
         optimizer.step()
         
-        batch_size = y_batch.size(0)
-        epoch_loss += loss.item() * batch_size  # Scale loss by batch size
-        total_samples += batch_size 
+        batchsize = y_batch.size(0)
+        epoch_loss += loss.item() * batchsize  # Scale loss by batch size
+        total_samples += batchsize 
 
         predictions_numpy = predictions.detach().cpu().numpy().reshape(-1, 1)
         y_batch_numpy = y_batch.detach().cpu().numpy().reshape(-1, 1)
@@ -600,7 +299,7 @@ test_predictions_scaled = classifier(X_test_scaled).flatten()
 test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
 test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
 
-plt.plot(scaler_y.inverse_transform(ytest).flatten(), label='Actual')
+plt.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual')
 plt.plot(test_predictions, label='Predicted')
 plt.legend()
 plt.show()
