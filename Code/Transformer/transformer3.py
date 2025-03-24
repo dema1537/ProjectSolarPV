@@ -1,4 +1,4 @@
-import torch
+import torch, math
 from torch import nn
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import Adam
@@ -7,6 +7,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.nn.modules.transformer import TransformerEncoderLayer
+from torch import nn, Tensor
+import torch.nn.functional as F
 
 device = "cpu"
 
@@ -29,7 +32,7 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
-df_np = df_merged[:].to_numpy()
+df_np = df_merged[:100].to_numpy()
 X = df_np
 
 split_train = int(len(X) * 0.7)
@@ -40,30 +43,30 @@ X_train, X_val, X_test = X[:split_train], X[split_train:split_val], X[split_val:
 # Sequence Data Preparation
 SEQUENCE_SIZE = 5
 
-# def to_sequences(seq_size, obs):
-#     x = []
-#     y = []
-#     for i in range(len(obs) - seq_size):
-#         window = [row[:].copy() for row in obs[i:(i + seq_size)]]
-#         after_window = obs[i + seq_size][7]
-#         y.append(after_window)
-
-#         window[-1][7] = 0.0
-#         x.append(window)
-#     return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
-
 def to_sequences(seq_size, obs):
     x = []
     y = []
     for i in range(len(obs) - seq_size):
         window = [row[:].copy() for row in obs[i:(i + seq_size)]]
-        window_7th = [row[7] for row in window]
-        after_window = obs[i + seq_size][7]
+        after_window = obs[i + seq_size-1][7]
         y.append(after_window)
 
-        #window = window[i:i + seq_size][7]
-        x.append(window_7th)
+        window[-1][7] = 0.0
+        x.append(window)
     return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
+
+# def to_sequences(seq_size, obs):
+#     x = []
+#     y = []
+#     for i in range(len(obs) - seq_size):
+#         window = [row[:].copy() for row in obs[i:(i + seq_size)]]
+#         window_7th = [row[7] for row in window]
+#         after_window = obs[i + seq_size][7]
+#         y.append(after_window)
+
+#         #window = window[i:i + seq_size][7]
+#         x.append(window_7th)
+#     return torch.tensor(x, dtype=torch.float32), torch.tensor(y, dtype=torch.float32)
 
 xtrain, ytrain = to_sequences(SEQUENCE_SIZE, X_train)
 xtest, ytest = to_sequences(SEQUENCE_SIZE, X_test)
@@ -128,13 +131,13 @@ print(y_train_tensor.shape)
 
 # Setup data loaders for batch
 train_dataset = TensorDataset(x_train_tensor, y_train_tensor)
-train_loader = DataLoader(train_dataset, batch_size=1, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=5, shuffle=True)
 
 test_dataset = TensorDataset(x_test_tensor, y_test_tensor)
-test_loader = DataLoader(test_dataset, batch_size=1, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=5, shuffle=False)
 
 class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, dropout=0.0, max_len=17032):
+    def __init__(self, d_model, dropout=0.1, max_len=17028):
         super(PositionalEncoding, self).__init__()
         self.dropout = nn.Dropout(p=dropout)
 
@@ -146,31 +149,111 @@ class PositionalEncoding(nn.Module):
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
+    def forward(self, x: Tensor) -> Tensor:
+        print(x.shape)
+        x = x + self.pe[:x.size(1), :, :]
+        print(x.shape)
+
         return self.dropout(x)
 
-class TransformerModel(nn.Module):
-    def __init__(self, input_dim=(15), d_model=64, nhead=4, num_layers=3, dropout=0.0):
-        super(TransformerModel, self).__init__()
-        self.encoder = nn.Linear(input_dim, d_model)
-        self.pos_encoder = PositionalEncoding(d_model, dropout)
-        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
-        self.decoder = nn.Linear(d_model, 1)
+# A forcasting model
+class ForecastingModel(torch.nn.Module):
+    def __init__(self, 
+                 seq_len=5,
+                 embed_size = 16,
+                 nhead = 4,
+                 dim_feedforward = 2048,
+                 dropout = 0.1,
+                 conv1d_emb = True,
+                 conv1d_kernel_size = 5,
+                 device = "cpu"):
+        super(ForecastingModel, self).__init__()
 
+        # Set Class-level Parameters
+        self.device = device
+        self.conv1d_emb = conv1d_emb
+        self.conv1d_kernel_size = conv1d_kernel_size
+        self.seq_len = seq_len
+        self.embed_size = embed_size
+
+        # Input Embedding Component
+        if conv1d_emb:
+            if conv1d_kernel_size%2==0:
+                raise Exception("conv1d_kernel_size must be an odd number to preserve dimensions.")
+            self.conv1d_padding = conv1d_kernel_size - 1
+            self.input_embedding  = nn.Conv1d(15, embed_size, kernel_size=conv1d_kernel_size)
+        else: self.input_embedding  = nn.Linear(15, embed_size)
+
+        # Positional Encoder Componet (See Code Copied from PyTorch Above)
+        self.position_encoder = PositionalEncoding(d_model=embed_size, 
+                                                   dropout=dropout,
+                                                   max_len=seq_len)
+        
+        # Transformer Encoder Layer Component
+        self.transformer_encoder = TransformerEncoderLayer(
+            d_model = embed_size,
+            nhead = nhead,
+            dim_feedforward = dim_feedforward,
+            dropout = dropout,
+            batch_first = True
+        )
+
+        # Regression Component
+        self.linear1 = nn.Linear(seq_len*embed_size, int(dim_feedforward))
+        self.linear2 = nn.Linear(int(dim_feedforward), int(dim_feedforward/2))
+        self.linear3 = nn.Linear(int(dim_feedforward/2), int(dim_feedforward/4))
+        self.linear4 = nn.Linear(int(dim_feedforward/4), int(dim_feedforward/16))
+        self.linear5 = nn.Linear(int(dim_feedforward/16), int(dim_feedforward/64))
+        self.outlayer = nn.Linear(int(dim_feedforward/64), 1)
+
+        # Basic Components
+        self.relu = nn.ReLU()
+        self.dropout = nn.Dropout(dropout)
+
+    # Model Forward Pass
     def forward(self, x):
-        x = self.encoder(x)
-        x = self.pos_encoder(x)
-        x = self.transformer_encoder(x)
-        x = self.decoder(x[:, -1, :]) 
-        return x
+        src_mask = self._generate_square_subsequent_mask()
+        src_mask.to(self.device)
+        if self.conv1d_emb:
+            #print(x.shape)
+ 
+            x = F.pad(x, (0, 0, self.conv1d_padding, 0), "constant", -1)
+            x = self.input_embedding(x.transpose(1, 2)).transpose(1, 2)
+            #print(x.shape)
+            #x = x.transpose(1, 2)
+        else: 
+            x = self.input_embedding(x)
+        x = self.position_encoder(x)
+        #print(x.shape)
 
-classifier = TransformerModel().to(device)
+        x = self.transformer_encoder(x, src_mask=src_mask).reshape((-1, self.seq_len*self.embed_size))
+        x = self.linear1(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.linear2(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.linear3(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.linear4(x)
+        x = self.relu(x)
+        x = self.dropout(x)
+        x = self.linear5(x)
+        x = self.relu(x)
+        return self.outlayer(x)
+    
+    # Function Copied from PyTorch Library to create upper-triangular source mask
+    def _generate_square_subsequent_mask(self):
+        return torch.triu(
+            torch.full((self.seq_len, self.seq_len), float('-inf'), dtype=torch.float32, device=self.device),
+            diagonal=1,
+        )
+classifier = ForecastingModel().to(device)
 
 # Train the model
-lossFunction = nn.HuberLoss()
-optimizer = torch.optim.AdamW(classifier.parameters(), lr=0.0001)
+lossFunction = nn.MSELoss()
+optimizer = torch.optim.Adam(classifier.parameters(), lr=0.0001)
 scheduler = ReduceLROnPlateau(optimizer, 'min', factor=0.5, patience=3, verbose=True)
 
 history = {
