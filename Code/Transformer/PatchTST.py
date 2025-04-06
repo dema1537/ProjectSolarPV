@@ -14,6 +14,7 @@ from transformers import (
     PatchTSTForPrediction,
     Trainer,
     TrainingArguments,
+    PatchTSTForRegression,
 )
 import numpy as np
 import pandas as pd
@@ -42,7 +43,7 @@ if __name__ == '__main__':
     timestamp_column = "time"
     id_columns = []
 
-    context_length = 3
+    context_length = 32
     forecast_horizon = 1
     patch_length = 1
     num_workers = 2  # Reduce this if you have low number of CPU cores
@@ -171,7 +172,7 @@ if __name__ == '__main__':
         random_mask_ratio=0.4,
         d_model=128,
         num_attention_heads=16,
-        num_hidden_layers=3,
+        num_hidden_layers=4,
         ffn_dim=256,
         dropout=0.2,
         head_dropout=0.2,
@@ -244,7 +245,7 @@ if __name__ == '__main__':
 
             }
 
-    epochs = 25
+    epochs = 5
     for epoch in range(epochs):
         model.train()  
         epoch_loss = 0
@@ -255,15 +256,20 @@ if __name__ == '__main__':
         train_losses, train_rmses, train_mapes = [], [], []
 
         for batch in train_dataloader:
-            inputs = batch['past_values'].to(device)
-            targets = batch['future_values'].to(device)
 
-            # output = model(inputs)
-            # print(output)
-            # print(output.__dict__)
+            
+            inputs = batch['past_values'].to(device),
+            targets = batch['future_values'].to(device),
+            
+            print(inputs.shape)
+            print(targets.shape)
 
-            # print(inputs.shape)
-            # print(targets.shape)
+
+            output = model(inputs)
+            print(output)
+            print(output.__dict__)
+
+
 
             optimiser.zero_grad()  
             predictions = model(inputs).prediction_outputs.flatten()  
@@ -333,7 +339,7 @@ if __name__ == '__main__':
         avg_val_loss = val_loss / val_batches
         avg_val_mape = val_mape / val_batches
 
-        history["train_loss"].append(epoch_loss/len(train_dataloader.dataset))
+        history["train_loss"].append(epoch_loss/len(train_dataloader))
         history["train_rmse"].append(avg_rmse)
         history["train_mape"].append(avg_mape)
 
@@ -343,7 +349,7 @@ if __name__ == '__main__':
 
 
 
-        print(f"Epoch {epoch+1}/{epochs}, Train Loss: {epoch_loss/len(train_dataloader.dataset):.6f}, Train RMSE: {avg_rmse:.4f}, Train MAPE: {avg_mape:.2f}% | "
+        print(f"Epoch {epoch+1}/{epochs}, Train Loss: {epoch_loss/len(train_dataloader):.6f}, Train RMSE: {avg_rmse:.4f}, Train MAPE: {avg_mape:.2f}% | "
             f"Val Loss: {avg_val_loss:.6f}, Val RMSE: {avg_val_rmse:.4f}, Val MAPE: {avg_val_mape:.2f}%")
         
     epochs_range = range(1, epochs + 1)
