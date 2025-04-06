@@ -32,7 +32,7 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
-df_np = df_merged[:100].to_numpy()
+df_np = df_merged[:10000].to_numpy()
 X = df_np
 
 split_train = int(len(X) * 0.7)
@@ -150,9 +150,9 @@ class PositionalEncoding(nn.Module):
         self.register_buffer('pe', pe)
 
     def forward(self, x: Tensor) -> Tensor:
-        print(x.shape)
+        #print(x.shape)
         x = x + self.pe[:x.size(1), :, :]
-        print(x.shape)
+        #print(x.shape)
 
         return self.dropout(x)
 
@@ -289,6 +289,7 @@ for epoch in range(epochs):
         # optimizer.step()
 
         optimizer.zero_grad()  
+        #I think the issue is that this is using a bathc thing but my val epoch is just putting the whole batch in
         predictions = classifier(x_batch).flatten()  
 
         loss = lossFunction(predictions, y_batch.flatten()) 
@@ -381,19 +382,25 @@ X_train_scaled = torch.tensor(xtrain, dtype=torch.float32, requires_grad=False)
 # train_predictions_scaled = classifier(x_train).flatten()
 # train_predictions_numpy = train_predictions_scaled.detach().cpu().numpy()
 # train_predictions = scaler_y.inverse_transform(train_predictions_numpy.reshape(-1, 1)).flatten()
-predictions_train = []
-outputs = classifier(X_train_scaled)
-predictions_train.extend(outputs.squeeze().tolist())
-predictions_train_np = np.array(predictions_train).reshape(-1, 1)
-train_predictions = scaler_y.inverse_transform((predictions_train_np))
-train_results = pd.DataFrame(data={'Train Predictions': train_predictions.flatten(), 'Actuals': scaler_y.inverse_transform(ytrain.reshape(-1, 1)).flatten()})
-pd.set_option('display.max_colwidth', 500)
-print(train_results)
 
-X_test_scaled = torch.tensor(xtest, dtype=torch.float32, requires_grad=False)
-test_predictions_scaled = classifier(X_test_scaled).flatten()
-test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
-test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
+
+
+# predictions_train = []
+# print(X_train_scaled.shape)
+# outputs = classifier(X_train_scaled)
+# predictions_train.extend(outputs.squeeze().tolist())
+# predictions_train_np = np.array(predictions_train).reshape(-1, 1)
+# train_predictions = scaler_y.inverse_transform((predictions_train_np))
+# train_results = pd.DataFrame(data={'Train Predictions': train_predictions.flatten(), 'Actuals': scaler_y.inverse_transform(ytrain.reshape(-1, 1)).flatten()})
+# pd.set_option('display.max_colwidth', 500)
+# print(train_results)
+
+# X_test_scaled = torch.tensor(xtest, dtype=torch.float32, requires_grad=False)
+# test_predictions_scaled = classifier(X_test_scaled).flatten()
+# test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
+# test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
+
+test_predictions = scaler_y.inverse_transform(np.array(predictions).reshape(-1, 1))
 
 plt.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual')
 plt.plot(test_predictions, label='Predicted')
