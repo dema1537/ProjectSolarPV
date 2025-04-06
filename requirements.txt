@@ -1,0 +1,11 @@
+torch
+torchvision
+torchaudio
+scipy
+matplotlib
+numpy
+pandas
+scikit-learn
+tensorflow
+timesfm
+jax
