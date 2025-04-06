@@ -1,5 +1,5 @@
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import Adam
 
@@ -42,7 +42,7 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
-df_np = df_merged[:].to_numpy()
+df_np = df_merged[:1000].to_numpy()
 X = df_np
 
 
@@ -52,12 +52,6 @@ split_val = int(len(X) * 0.85)
 
 X_train, X_val, X_test = X[:split_train], X[split_train:split_val], X[split_val:]
 
-
-
-
-
-
-
 # Sequence Data Preparation
 SEQUENCE_SIZE = 5
 
@@ -65,10 +59,9 @@ def to_sequences(seq_size, obs):
     x = []
     y = []
     for i in range(len(obs) - seq_size):
-        window = [row[:].copy() for row in obs[i:(i + seq_size)]] 
-        after_window = obs[i + seq_size][7]
+        window = [row[:].copy() for row in obs[i:(i + seq_size)]]
+        after_window = obs[i + seq_size-1][7]
         y.append(after_window)
-
 
         window[-1][7] = 0.0
         x.append(window)
@@ -123,10 +116,10 @@ print(x_train_tensor.shape)
 print(y_train_tensor.shape)
 # Setup data loaders for batch
 train_dataset = TensorDataset(x_train_tensor, y_train_tensor)
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+train_loader = DataLoader(train_dataset, batch_size=5, shuffle=True)
 
 test_dataset = TensorDataset(x_test_tensor, y_test_tensor)
-test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+test_loader = DataLoader(test_dataset, batch_size=5, shuffle=False)
 
 
 
@@ -265,7 +258,7 @@ test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 # X_train_tensor = torch.tensor(X_train_scaled, dtype=torch.float32)
 # y_train_tensor = torch.tensor(y_train_scaled, dtype=torch.float32)
 # X_val_tensor = torch.tensor(X_val_scaled, dtype=torch.float32)
-# y_val_tensor = torch.tensor(y_val_scaled, dtype=torch.float32)
+# y_val_tensor = torch.tensor(y_val_scaled, dtype=torch.float32) 
 
 
 # batch_size = 256
@@ -413,6 +406,23 @@ test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
 
 
+# class PositionalEncoding(nn.Module):
+#     def __init__(self, d_model, dropout=0.1, max_len=17028):
+#         super(PositionalEncoding, self).__init__()
+#         self.dropout = nn.Dropout(p=dropout)
+
+#         pe = torch.zeros(max_len, d_model)
+#         position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+#         div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+#         pe[:, 0::2] = torch.sin(position * div_term)
+#         pe[:, 1::2] = torch.cos(position * div_term)
+#         pe = pe.unsqueeze(0).transpose(0, 1)
+#         self.register_buffer('pe', pe)
+
+#     def forward(self, x):
+#         x = x + self.pe[:x.size(0), :]
+#         return self.dropout(x)
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, dropout=0.1, max_len=17028):
         super(PositionalEncoding, self).__init__()
@@ -426,8 +436,11 @@ class PositionalEncoding(nn.Module):
         pe = pe.unsqueeze(0).transpose(0, 1)
         self.register_buffer('pe', pe)
 
-    def forward(self, x):
-        x = x + self.pe[:x.size(0), :]
+    def forward(self, x: Tensor) -> Tensor:
+        #print(x.shape)
+        x = x + self.pe[:x.size(1), :, :]
+        #print(x.shape)
+
         return self.dropout(x)
     
 
@@ -469,7 +482,7 @@ history = {
     'val_mape': []
 }
 
-epochs = 100
+epochs = 25
 for epoch in range(epochs):
 
 
@@ -586,19 +599,22 @@ X_train_scaled = torch.tensor(xtrain, dtype=torch.float32, requires_grad=False)
 # train_predictions_scaled = classifier(x_train).flatten()
 # train_predictions_numpy = train_predictions_scaled.detach().cpu().numpy()
 # train_predictions = scaler_y.inverse_transform(train_predictions_numpy.reshape(-1, 1)).flatten()
-predictions_train = []
-outputs = classifier(X_train_scaled)
-predictions_train.extend(outputs.squeeze().tolist())
-predictions_train_np = np.array(predictions_train).reshape(-1, 1)
-train_predictions = scaler_y.inverse_transform((predictions_train_np))
-train_results = pd.DataFrame(data={'Train Predictions': train_predictions.flatten(), 'Actuals': scaler_y.inverse_transform(ytrain.reshape(-1, 1)).flatten()})
-pd.set_option('display.max_colwidth', 500)
-print(train_results)
+# predictions_train = []
+# outputs = classifier(X_train_scaled)
+# predictions_train.extend(outputs.squeeze().tolist())
+# predictions_train_np = np.array(predictions_train).reshape(-1, 1)
+# train_predictions = scaler_y.inverse_transform((predictions_train_np))
+# train_results = pd.DataFrame(data={'Train Predictions': train_predictions.flatten(), 'Actuals': scaler_y.inverse_transform(ytrain.reshape(-1, 1)).flatten()})
+# pd.set_option('display.max_colwidth', 500)
+# print(train_results)
 
-X_test_scaled = torch.tensor(xtest, dtype=torch.float32, requires_grad=False)
-test_predictions_scaled = classifier(X_test_scaled).flatten()
-test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
-test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
+# X_test_scaled = torch.tensor(xtest, dtype=torch.float32, requires_grad=False)
+# test_predictions_scaled = classifier(X_test_scaled).flatten()
+# test_predictions_numpy = test_predictions_scaled.detach().cpu().numpy()
+# test_predictions = scaler_y.inverse_transform(test_predictions_numpy.reshape(-1, 1)).flatten()
+
+test_predictions = scaler_y.inverse_transform(np.array(predictions).reshape(-1, 1))
+
 
 plt.plot(scaler_y.inverse_transform(ytest).flatten(), label='Actual')
 plt.plot(test_predictions, label='Predicted')
