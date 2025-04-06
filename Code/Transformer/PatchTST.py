@@ -14,7 +14,6 @@ from transformers import (
     PatchTSTForPrediction,
     Trainer,
     TrainingArguments,
-    PatchTSTForRegression,
 )
 import numpy as np
 import pandas as pd
@@ -43,15 +42,15 @@ if __name__ == '__main__':
     timestamp_column = "time"
     id_columns = []
 
-    context_length = 32
+    context_length = 6
     forecast_horizon = 1
-    patch_length = 1
-    num_workers = 2  # Reduce this if you have low number of CPU cores
+    patch_length = 3
+    num_workers = 4  # Reduce this if you have low number of CPU cores
     batch_size = 64  # Adjust according to GPU memory
 
 
-    df_weather = pd.read_csv("Data\OpenMeteoData.csv")
-    df_radiance = pd.read_csv("Data\PVGISdata.csv")
+    df_weather = pd.read_csv("Data\\OpenMeteoData.csv")
+    df_radiance = pd.read_csv("Data\\PVGISdata.csv")
 
     df_radiance = df_radiance[1944:]
 
@@ -172,7 +171,7 @@ if __name__ == '__main__':
         random_mask_ratio=0.4,
         d_model=128,
         num_attention_heads=16,
-        num_hidden_layers=4,
+        num_hidden_layers=3,
         ffn_dim=256,
         dropout=0.2,
         head_dropout=0.2,
@@ -245,7 +244,7 @@ if __name__ == '__main__':
 
             }
 
-    epochs = 5
+    epochs = 25
     for epoch in range(epochs):
         model.train()  
         epoch_loss = 0
@@ -256,20 +255,15 @@ if __name__ == '__main__':
         train_losses, train_rmses, train_mapes = [], [], []
 
         for batch in train_dataloader:
+            inputs = batch['past_values'].to(device)
+            targets = batch['future_values'].to(device)
 
-            
-            inputs = batch['past_values'].to(device),
-            targets = batch['future_values'].to(device),
-            
-            print(inputs.shape)
-            print(targets.shape)
+            # output = model(inputs)
+            # print(output)
+            # print(output.__dict__)
 
-
-            output = model(inputs)
-            print(output)
-            print(output.__dict__)
-
-
+            # print(inputs.shape)
+            # print(targets.shape)
 
             optimiser.zero_grad()  
             predictions = model(inputs).prediction_outputs.flatten()  
