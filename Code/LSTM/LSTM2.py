@@ -14,12 +14,23 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
+#import tensorflow as tf
 import torch.optim as optim
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 
-filename = "CNN.pth.tar"
+
+import os
+
 device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda"
+    print("CUDA is available. Using GPU.")
+else:
+    print("CUDA is not available. Using CPU.")
+
+filepath = "Code\LSTM\LSTMModelOutputs\\"
 
 df_weather = pd.read_csv("Data\OpenMeteoData.csv")
 df_radiance = pd.read_csv("Data\PVGISdata.csv")
@@ -125,11 +136,8 @@ class LSTM(nn.Module):
 
             nn.LSTM(32,16, batch_first=True),
 
-            nn.Flatten(),
-
-            
+            nn.Flatten(),         
         )
-
 
         self.classify = nn.Sequential(
 
@@ -139,9 +147,6 @@ class LSTM(nn.Module):
             nn.ReLU(),
             nn.Linear(16 * 5, 1),
             
-
-            
-
         )
 
     def forward(self, x):
@@ -159,8 +164,8 @@ class LSTM(nn.Module):
 classifier = LSTM().to(device)
 
 lossFunction = nn.MSELoss()
-
 optimiser = optim.Adam(classifier.parameters(), lr=1e-4, weight_decay=1e-3)
+scheduler = ReduceLROnPlateau(optimiser, 'min', factor=0.5, patience=3, verbose=True)
 
 X_train_tensor = torch.tensor(X_train_scaled, dtype=torch.float32)
 y_train_tensor = torch.tensor(y_train_scaled, dtype=torch.float32)

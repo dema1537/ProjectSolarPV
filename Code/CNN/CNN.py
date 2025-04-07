@@ -14,12 +14,27 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
-import tensorflow as tf
 import torch.optim as optim
 
+import os
 
-filename = "CNN.pth.tar"
+
+
 device = "cpu"
+
+if torch.cuda.is_available():
+    device = "cuda"
+    print("CUDA is available. Using GPU.")
+else:
+    print("CUDA is not available. Using CPU.")
+
+
+#ProjectSolarPV\Code\Transformer\ForecastingModel.py
+filepath = "Code\CNN\CNNOutputs\\"
+
+if not os.path.exists(filepath):
+    os.makedirs(filepath, exist_ok=True)
+    print(f"Directory '{filepath}' created successfully.")
 
 df_weather = pd.read_csv("Data\OpenMeteoData.csv")
 df_radiance = pd.read_csv("Data\PVGISdata.csv")
