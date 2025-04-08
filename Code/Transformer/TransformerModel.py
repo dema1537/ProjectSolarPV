@@ -54,7 +54,7 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
-df_np = df_merged[:1000].to_numpy()
+df_np = df_merged[:-3].to_numpy()
 X = df_np
 
 
@@ -497,7 +497,7 @@ history = {
     'val_mape': []
 }
 
-epochs = 2
+epochs = 15
 patience = 10
 best_val_loss = 99999999.0
 epochs_no_improve = 0
@@ -614,6 +614,10 @@ for epoch in range(epochs):
 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))  
 
 classifier.eval()
+test_loss = 0
+test_rmse = 0
+test_mape = 0
+test_batches = 0
 predictions = []
 cloud_cover = []
 with torch.no_grad():
@@ -622,6 +626,42 @@ with torch.no_grad():
         x_batch = x_batch.to(device)
         outputs = classifier(x_batch)
         predictions.extend(outputs.squeeze().tolist())
+
+        x_batch, y_batch = batch
+        x_batch, y_batch = x_batch.to(device), y_batch.to(device)
+        test_predictions = classifier(x_batch).flatten()
+        loss = lossFunction(test_predictions, y_batch.flatten())
+        test_loss += loss.item()
+
+        test_predictions_numpy = test_predictions.cpu().numpy().reshape(-1, 1)
+        y_test_numpy = y_batch.cpu().numpy().reshape(-1, 1)
+
+        test_predictions_original = test_predictions_numpy.flatten()
+        y_test_original = y_test_numpy.flatten()
+
+        test_rmse += np.sqrt(np.mean((test_predictions_original - y_test_original) ** 2))
+        test_mape += np.mean(np.abs((test_predictions_original - y_test_original) / (y_test_original + 1))) * 100 
+
+        test_batches += 1
+
+
+avg_test_rmse = test_rmse / test_batches
+avg_test_loss = test_loss / test_batches
+avg_test_mape = test_mape / test_batches
+
+
+print("----\n\n\n")
+print(f"Test Loss: {avg_test_loss:.6f}, Test RMSE: {avg_test_rmse:.4f}, Test MAPE: {avg_test_mape:.2f}%")
+
+
+
+print("\n\n\n----")
+
+with open(filepath + "TransformerTestMetrics.txt", "w") as f:
+    f.write(f"Test Loss: {avg_test_loss:.6f}\n")
+    f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
+    f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
+print("Metrics saved")
 
 for i in range(0, len(xtest)):
             #0.7634408602150538
@@ -741,7 +781,7 @@ ax1.set_xlabel("Time Steps")
 plt.title("Actual and Predicted Values on Full Cloud Cover")
 
 ax1.set_xlim(2040, 2110)
-ax2.set_ylim(0, 17500)
+ax2.set_ylim(-1000, 17500)
 plt.savefig(filepath + '3DayFullCloud.png')
 plt.show()
 

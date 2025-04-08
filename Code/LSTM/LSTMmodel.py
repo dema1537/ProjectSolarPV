@@ -441,7 +441,7 @@ ax1.set_xlabel("Time Steps")
 plt.title("Actual and Predicted Values on Full Cloud Cover")
 
 ax1.set_xlim(2040, 2110)
-ax2.set_ylim(0, 17500)
+ax2.set_ylim(-1000, 17500)
 plt.savefig(filepath + '3DayFullCloud.png')
 plt.show()
 
