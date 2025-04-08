@@ -23,15 +23,15 @@ else:
 
 
 #ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code\\Transformer\\ForecastingModelOutputs\\"
+filepath = "Code/Transformer/ForecastingModelOutputs/"
 
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
     print(f"Directory '{filepath}' created successfully.")
 
-df_weather = pd.read_csv("Data\\OpenMeteoData.csv")
-df_radiance = pd.read_csv("Data\\PVGISdata.csv")
+df_weather = pd.read_csv("Data/OpenMeteoData.csv")
+df_radiance = pd.read_csv("Data/PVGISdata.csv")
 
 df_radiance = df_radiance[1944:]
 

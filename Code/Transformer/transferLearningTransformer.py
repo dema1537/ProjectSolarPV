@@ -37,10 +37,10 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available. Using CPU.")
 
-filepath = "Code\\Transformer\\TransformerModelOutputs\\"
+filepath = "Code/Transformer/TransformerModelOutputs/"
 
-df_weather = pd.read_csv("Data\\facade_weather_data.csv")
-df_radiance = pd.read_csv("Data\\facade_solar_data.csv")
+df_weather = pd.read_csv("Data/facade_weather_data.csv")
+df_radiance = pd.read_csv("Data/facade_solar_data.csv")
 
 df_radiance.drop(columns=['inverterMode'], inplace=True)
 df_radiance.drop(columns=['inverter'], inplace=True)

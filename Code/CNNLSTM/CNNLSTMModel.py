@@ -33,14 +33,14 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available. Using CPU.")
 
-filepath = "Code\\CNNLSTM\\CNNLSTMModelOutputs\\"
+filepath = "Code/CNNLSTM/CNNLSTMModelOutputs/"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
     print(f"Directory '{filepath}' created successfully.")
 
-df_weather = pd.read_csv("Data\\OpenMeteoData.csv")
-df_radiance = pd.read_csv("Data\\PVGISdata.csv")
+df_weather = pd.read_csv("Data/OpenMeteoData.csv")
+df_radiance = pd.read_csv("Data/PVGISdata.csv")
 
 df_radiance = df_radiance[1944:]
 
