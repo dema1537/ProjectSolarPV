@@ -30,14 +30,14 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available. Using CPU.")
 
-filepath = "Code\LSTM\LSTMModelOutputs\\"
+filepath = "Code\\LSTM\\LSTMModelOutputs\\"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
     print(f"Directory '{filepath}' created successfully.")
 
-df_weather = pd.read_csv("Data\OpenMeteoData.csv")
-df_radiance = pd.read_csv("Data\PVGISdata.csv")
+df_weather = pd.read_csv("Data\\OpenMeteoData.csv")
+df_radiance = pd.read_csv("Data\\PVGISdata.csv")
 
 df_radiance = df_radiance[1944:]
 
@@ -55,8 +55,8 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
+# df_np = df_merged[:100].to_numpy()
 df_np = df_merged[:-3].to_numpy()
-#df_np = df_merged[:1000].to_numpy()
 X = df_np
 
 split_train = int(len(X) * 0.7)
@@ -219,7 +219,7 @@ history = {
     'val_mape': []
 }
 
-epochs = 50
+epochs = 250
 patience = 10
 best_val_loss = 99999999.0
 epochs_no_improve = 0
@@ -333,6 +333,10 @@ for epoch in range(epochs):
 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
 
 classifier.eval()
+test_loss = 0
+test_rmse = 0
+test_mape = 0
+test_batches = 0
 predictions = []
 cloud_cover = []
 with torch.no_grad():
@@ -342,6 +346,42 @@ with torch.no_grad():
         outputs = classifier(x_batch)
         predictions.extend(outputs.squeeze().tolist())
 
+        x_batch, y_batch = batch
+        x_batch, y_batch = x_batch.to(device), y_batch.to(device)
+        test_predictions = classifier(x_batch).flatten()
+        loss = lossFunction(test_predictions, y_batch.flatten())
+        test_loss += loss.item()
+
+        test_predictions_numpy = test_predictions.cpu().numpy().reshape(-1, 1)
+        y_test_numpy = y_batch.cpu().numpy().reshape(-1, 1)
+
+        test_predictions_original = test_predictions_numpy.flatten()
+        y_test_original = y_test_numpy.flatten()
+
+        test_rmse += np.sqrt(np.mean((test_predictions_original - y_test_original) ** 2))
+        test_mape += np.mean(np.abs((test_predictions_original - y_test_original) / (y_test_original + 1))) * 100 
+
+        test_batches += 1
+
+
+avg_test_rmse = test_rmse / test_batches
+avg_test_loss = test_loss / test_batches
+avg_test_mape = test_mape / test_batches
+
+
+print("----\n\n\n")
+print(f"Test Loss: {avg_test_loss:.6f}, Test RMSE: {avg_test_rmse:.4f}, Test MAPE: {avg_test_mape:.2f}%")
+
+
+
+print("\n\n\n----")
+
+with open(filepath + "LSTMTestMetrics.txt", "w") as f:
+    f.write(f"Test Loss: {avg_test_loss:.6f}\n")
+    f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
+    f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
+    f.write(f"Test epoch: {epochs:.2f}%\n")
+print("Metrics saved")
 
 for i in range(0, len(xtest)):
             #0.7634408602150538
@@ -387,7 +427,7 @@ plt.title("Actual and Predicted Values on Mixed Cloud Cover")
 
 ax1.set_xlim(75, 150)
 plt.savefig(filepath + '3DayMixedClouds.png')
-plt.show()
+#plt.show()
 
 fig, ax2 = plt.subplots()
 ax1 = ax2.twinx()
@@ -415,7 +455,7 @@ plt.title("Actual and Predicted Values on Sunny days")
 
 ax1.set_xlim(790, 840)
 plt.savefig(filepath + '2DaySunny.png')
-plt.show()
+#plt.show()
 
 fig, ax2 = plt.subplots()
 ax1 = ax2.twinx()
@@ -441,9 +481,9 @@ ax1.set_xlabel("Time Steps")
 plt.title("Actual and Predicted Values on Full Cloud Cover")
 
 ax1.set_xlim(2040, 2110)
-ax2.set_ylim(-1000, 17500)
+ax2.set_ylim(-1000, 22500)
 plt.savefig(filepath + '3DayFullCloud.png')
-plt.show()
+#plt.show()
 
 
 
@@ -477,8 +517,8 @@ plt.title("Training vs Validation MAPE")
 
 
 plt.savefig(filepath + 'TrainingValidationGraphs.png')
-plt.show()
-plt.show()
+#plt.show()
+#plt.show()
 
 
 # epochs = 25
@@ -537,7 +577,7 @@ plt.show()
 # plt.plot(y_test, label='Actual')
 # plt.plot(test_predictions, label='Predicted')
 # plt.legend()
-# plt.show()
+# #plt.show()
 
 
 # #The epoch graphs#
@@ -568,4 +608,4 @@ plt.show()
 # plt.legend()
 # plt.title("Training vs Validation MAPE")
 
-# plt.show()
+# #plt.show()

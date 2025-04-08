@@ -33,7 +33,7 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available. Using CPU.")
 
-filepath = "Code\CNN\CNNOutputs\\"
+filepath = "Code\\CNN\\CNNOutputs\\"
 
 df_weather = pd.read_csv("Data\\facade_weather_data.csv")
 df_radiance = pd.read_csv("Data\\facade_solar_data.csv")
@@ -91,7 +91,7 @@ df_merged.dropna(inplace=True)
 
 print(df_merged.head())
 
-df_merged.to_csv('full_dataframe.csv', index=False)
+#df_merged.to_csv('full_dataframe.csv', index=False)
 
 
 #df_np = df_merged[:1000].to_numpy()
@@ -283,7 +283,7 @@ class newCNN(nn.Module):
         
         )
 
-        Nchannels = self.feature(torch.empty(1, 5, 5)).size(-1)
+        Nchannels = self.feature(torch.empty(1, 5, 54)).size(-1)
 
         self.classify = nn.Sequential(
 
@@ -502,6 +502,7 @@ with open(filepath + "newTLCNNTestMetrics.txt", "w") as f:
     f.write(f"Test Loss: {avg_test_loss:.6f}\n")
     f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
     f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
+    f.write(f"Test epoch: {epochs:.2f}%\n")
 print("Metrics saved")
 
 
@@ -538,7 +539,7 @@ plt.legend(loc='upper left')
 plt.grid(True)
 plt.xlim(60, 150)
 plt.savefig(filepath + 'newDayAccuracy.png')
-plt.show()
+#plt.show()
 
 
 epochs_range = range(1, len(history["val_loss"]) + 1)
@@ -570,7 +571,7 @@ plt.title("Training vs Validation MAPE")
 
 
 plt.savefig(filepath + 'newTLTrainingValidationGraphs.png')
-plt.show()
+#plt.show()
 
 
 
@@ -746,6 +747,7 @@ with open(filepath + "oldTL_CNNTestMetrics.txt", "w") as f:
     f.write(f"Test Loss: {avg_test_loss:.6f}\n")
     f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
     f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
+    f.write(f"Test epoch: {epochs:.2f}%\n")
 print("Metrics saved")
 
 
@@ -769,7 +771,7 @@ plt.legend(loc='upper left')
 plt.grid(True)
 plt.xlim(60, 150)
 plt.savefig(filepath + 'oldDayAccuracy.png')
-plt.show()
+#plt.show()
 
 
 epochs_range = range(1, len(history["val_loss"]) + 1)
@@ -801,5 +803,5 @@ plt.title("Training vs Validation MAPE")
 
 
 plt.savefig(filepath + 'oldTLTrainingValidationGraphs.png')
-plt.show()
+#plt.show()
 

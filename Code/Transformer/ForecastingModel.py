@@ -23,7 +23,7 @@ else:
 
 
 #ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code\Transformer\ForecastingModelOutputs\\"
+filepath = "Code\\Transformer\\ForecastingModelOutputs\\"
 
 
 if not os.path.exists(filepath):
@@ -49,8 +49,8 @@ df_merged.drop(columns=['time'], inplace=True)
 
 df_merged.dropna(inplace=True)
 
+#df_np = df_merged[:100].to_numpy()
 df_np = df_merged[:-3].to_numpy()
-#df_np = df_merged[:1000].to_numpy()
 X = df_np
 
 split_train = int(len(X) * 0.7)
@@ -293,7 +293,7 @@ history = {
     'val_mape': []
 }
 
-epochs = 100
+epochs = 150
 patience = 10
 best_val_loss = 99999999.0
 epochs_no_improve = 0
@@ -454,6 +454,7 @@ with open(filepath + "ForecastingTestMetrics.txt", "w") as f:
     f.write(f"Test Loss: {avg_test_loss:.6f}\n")
     f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
     f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
+    f.write(f"Test epoch: {epochs:.2f}%\n")
 print("Metrics saved")
 
 
@@ -505,12 +506,12 @@ test_predictions = scaler_y.inverse_transform(np.array(predictions).reshape(-1, 
 # plt.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual')
 # plt.plot(test_predictions, label='Predicted')
 # plt.legend()
-# plt.show()
+# #plt.show()
 
 # numbers = np.array(cloud_cover)
 # plt.bar(range(len(numbers)), numbers)
 # plt.ylabel("Cloud Cover (%)")
-# plt.show()
+# #plt.show()
 
 fig, ax2 = plt.subplots()
 ax1 = ax2.twinx()
@@ -537,7 +538,7 @@ plt.title("Actual and Predicted Values on Mixed Cloud Cover")
 
 ax1.set_xlim(75, 150)
 plt.savefig(filepath + '3DayMixedClouds.png')
-plt.show()
+#plt.show()
 
 fig, ax2 = plt.subplots()
 ax1 = ax2.twinx()
@@ -565,7 +566,7 @@ plt.title("Actual and Predicted Values on Sunny days")
 
 ax1.set_xlim(790, 840)
 plt.savefig(filepath + '2DaySunny.png')
-plt.show()
+#plt.show()
 
 fig, ax2 = plt.subplots()
 ax1 = ax2.twinx()
@@ -591,9 +592,9 @@ ax1.set_xlabel("Time Steps")
 plt.title("Actual and Predicted Values on Full Cloud Cover")
 
 ax1.set_xlim(2040, 2110)
-ax2.set_ylim(-1000, 17500)
+ax2.set_ylim(-1000, 22500)
 plt.savefig(filepath + '3DayFullCloud.png')
-plt.show()
+#plt.show()
 
 
 
@@ -627,5 +628,5 @@ plt.title("Training vs Validation MAPE")
 
 
 plt.savefig(filepath + 'TrainingValidationGraphs.png')
-plt.show()
-plt.show()
+#plt.show()
+#plt.show()
