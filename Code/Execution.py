@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     #CNN
     try:
-        result = subprocess.run(['python', "Code//CNN//CNNmodel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "Code//CNN//CNNModel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing CNN: {e}")
