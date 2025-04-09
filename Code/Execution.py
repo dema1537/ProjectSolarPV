@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     #CNN
     try:
-        result = subprocess.run(['python', "Code/CNN/CNNModel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "CNN/CNNModel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing CNN: {e}")
@@ -36,7 +36,7 @@ if __name__ == "__main__":
     print("-" * 20)
 
     try:
-        result = subprocess.run(['python', "Code/CNN/transferLearningCNN.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "CNN/transferLearningCNN.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing tlCNN: {e}")
@@ -51,7 +51,7 @@ if __name__ == "__main__":
 
     #CNNLSTM
     try:
-        result = subprocess.run(['python', "Code/CNNLSTM/CNNLSTMModel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "CNNLSTM/CNNLSTMModel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing CNNLSTM: {e}")
@@ -61,7 +61,7 @@ if __name__ == "__main__":
     print("-" * 20)
 
     try:
-        result = subprocess.run(['python', "Code/CNNLSTM/transferLearningCNNLSTM.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "CNNLSTM/transferLearningCNNLSTM.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing tlCNNLSTM: {e}")
@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     #LSTM
     try:
-        result = subprocess.run(['python', "Code/LSTM/LSTMmodel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "LSTM/LSTMmodel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing LSTM: {e}")
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     print("-" * 20)
 
     try:
-        result = subprocess.run(['python', "Code/LSTM/transferLearningLSTM.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "LSTM/transferLearningLSTM.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing tlLSTM: {e}")
@@ -95,7 +95,7 @@ if __name__ == "__main__":
 
     #Forecast
     try:
-        result = subprocess.run(['python', "Code/Transformer/ForecastingModel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "Transformer/ForecastingModel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing FORECASTING: {e}")
@@ -105,7 +105,7 @@ if __name__ == "__main__":
     print("-" * 20)
 
     try:
-        result = subprocess.run(['python', "Code/Transformer/transferLearningForecasting.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "Transformer/transferLearningForecasting.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing tlFORECASTING: {e}")
@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     #Transformer
     try:
-        result = subprocess.run(['python', "Code/Transformer/TransformerModel.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "Transformer/TransformerModel.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing TRANSFORMER: {e}")
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     print("-" * 20)
 
     try:
-        result = subprocess.run(['python', "Code/Transformer/transferLearningTransformer.py"], capture_output=True, text=True, check=True)
+        result = subprocess.run(['python', "Transformer/transferLearningTransformer.py"], capture_output=True, text=True, check=True)
         print(result.stdout)  # Print the output of the executed script
     except subprocess.CalledProcessError as e:
         print(f"Error executing tlTRANSFORMER: {e}")
