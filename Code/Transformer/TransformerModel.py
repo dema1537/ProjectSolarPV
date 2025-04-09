@@ -308,6 +308,7 @@ for epoch in range(epochs):
         epochs_no_improve += 1
         if epochs_no_improve >= patience:
             print(f"Early stopping triggered after {epoch+1} epochs!")
+            epochs = epoch 
             classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
             break
 

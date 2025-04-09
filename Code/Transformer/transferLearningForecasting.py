@@ -28,7 +28,7 @@ import torch.nn.functional as F
 
 
 device = "cpu"
-epochRun = 35
+epochRun = 20
 
 
 if torch.cuda.is_available():
