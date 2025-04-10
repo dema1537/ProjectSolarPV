@@ -1,0 +1,5 @@
+Train Time: 1750.992 secs
+Test Time*: 14.030 secs
+3 day Mixed Time: 0.342 secs
+3 day Full Time: 0.329 secs
+Sunny Time: 0.217 secs
