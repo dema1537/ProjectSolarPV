@@ -42,7 +42,7 @@ else:
 
 
 #ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code/CNNLSTM/Outputs/"
+filepath = "Code/LSTM/Outputs/"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
