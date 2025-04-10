@@ -93,7 +93,8 @@ train_loader, val_loader, test_loader, ThreeDayMixed_loader, TwoDaySunny_loader,
 
 #training below
 
-history, epochsRan = TrainingLoop(classifier, epochs=3, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
+history, epochsRan, TrainTime = TrainingLoop(classifier, epochs=3, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
+
 
 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
 classifier.eval()
@@ -101,26 +102,21 @@ classifier.eval()
 
 #below is testing
 
-Overall_cloud_cover, Overall_predictions = TestingLoop(classifier, epochsRan, testloader=test_loader, filepath=filepath, device=device, dataSplit=xtest, scaler_x=scaler_x)
 
-
-
-#Testing above
+Overall_cloud_cover, Overall_predictions, testTime = TestingLoop(classifier, epochsRan, testloader=test_loader, filepath=filepath, device=device, dataSplit=xtest, scaler_x=scaler_x)
 
 #Evaluation and graph metrics  metrics below
 
-
-
 #Evaluation of 3 day mixed
-ThreeDayMixedCloudCover, ThreeDayMixedPredictions = TestingLoop(classifier, epochsRan, testloader=ThreeDayMixed_loader, filepath=filepath + "DayGraphs/" + "Mixed/", device=device, dataSplit=xThreeDayMixed, scaler_x=scaler_x) 
+ThreeDayMixedCloudCover, ThreeDayMixedPredictions, MixedTime = TestingLoop(classifier, epochsRan, testloader=ThreeDayMixed_loader, filepath=filepath + "DayGraphs/" + "Mixed/", device=device, dataSplit=xThreeDayMixed, scaler_x=scaler_x) 
 Evalutaion(ThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, history, filepath=filepath + "DayGraphs/" + "Mixed/", title="3 Days with Mixed Cloud COver")
 
 #Evaluation of 3 day full
-ThreeDayFullCloudCover, ThreeDayFullPredictions = TestingLoop(classifier, epochsRan, testloader=ThreeDayFull_loader, filepath=filepath + "DayGraphs/" + "Full/", device=device, dataSplit=xThreeDayFull, scaler_x=scaler_x) 
+ThreeDayFullCloudCover, ThreeDayFullPredictions, FullTime = TestingLoop(classifier, epochsRan, testloader=ThreeDayFull_loader, filepath=filepath + "DayGraphs/" + "Full/", device=device, dataSplit=xThreeDayFull, scaler_x=scaler_x) 
 Evalutaion(ThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, history, filepath=filepath + "DayGraphs/" + "Full/", title="3 Days with Full cloud cover")
 
 #Evaluation of 2 day sunny
-TwoDaySunnyCloudCover, TwoDaySunnyPredictions = TestingLoop(classifier, epochsRan, testloader=TwoDaySunny_loader, filepath=filepath + "DayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+TwoDaySunnyCloudCover, TwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan, testloader=TwoDaySunny_loader, filepath=filepath + "DayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
 Evalutaion(TwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, history, filepath=filepath + "DayGraphs/" + "Sunny/", title="2 Sunny Days")
 
 
@@ -153,3 +149,12 @@ plt.title("Training vs Validation MAPE")
 
 
 plt.savefig(filepath + 'TrainingValidationGraphs.png')
+
+
+with open(filepath + "TimeInfo.txt", "w") as f:
+    f.write(f"Train Time: {TrainTime:.3f} secs\n")
+    f.write(f"Test Time*: {testTime:.3f} secs\n")
+    f.write(f"3 day Mixed Time: {MixedTime:.3f} secs\n")
+    f.write(f"3 day Full Time: {FullTime:.3f} secs\n")        
+    f.write(f"Sunny Time: {SunnyTime:.3f} secs\n")
+print("Time Metrics saved")

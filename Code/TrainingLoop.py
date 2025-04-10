@@ -4,10 +4,14 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
+import time
 
 
 
 def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
+
+    startTime = time.time()
+
 
     lossFunction = nn.MSELoss()
     optimiser = Adam(classifier.parameters(), lr=1e-4, weight_decay=1e-3)
@@ -128,4 +132,7 @@ def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
                 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
                 break
 
-    return history, epochs
+
+    endTime = time.time()
+
+    return history, epochs, endTime - startTime

@@ -5,9 +5,12 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
 import os
+import time
 
 
 def TestingLoop(classifier, epochsRan, testloader, filepath, device, dataSplit, scaler_x):
+
+    startTime = time.time()
 
     if not os.path.exists(filepath):
         os.makedirs(filepath, exist_ok=True)    
@@ -64,7 +67,7 @@ def TestingLoop(classifier, epochsRan, testloader, filepath, device, dataSplit, 
         f.write(f"Test Loss: {avg_test_loss:.6f}\n")
         f.write(f"Test RMSE: {avg_test_rmse:.4f}\n")
         f.write(f"Test MAPE: {avg_test_mape:.2f}%\n")
-        f.write(f"Test epoch: {epochs:.2f}%\n")
+        f.write(f"Test epoch: {epochs:.2f}\n")
     print("Metrics saved")
 
 
@@ -73,4 +76,9 @@ def TestingLoop(classifier, epochsRan, testloader, filepath, device, dataSplit, 
             temp = (scaler_x.inverse_transform(np.array(xtest[i][4]).reshape(1, -1)))
             cloud_cover.append(temp[0][4])
 
-    return cloud_cover, predictions
+    
+    endTime = time.time()
+
+
+
+    return cloud_cover, predictions, endTime - startTime
