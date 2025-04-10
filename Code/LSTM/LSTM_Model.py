@@ -16,6 +16,8 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+import torch.nn.functional as F
+
 
 import sys
 import os
@@ -40,53 +42,51 @@ else:
 
 
 #ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code/CNN/Outputs/"
+filepath = "Code/CNNLSTM/Outputs/"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
     print(f"Directory '{filepath}' created successfully.")
 
-class CNN(nn.Module):
+class LSTM(nn.Module):
+
     def __init__(self):
         super().__init__()
         self.feature = nn.Sequential(
-            nn.Conv1d(in_channels=5, out_channels=16, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
 
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
+            nn.LSTM(15, 64, batch_first=True, dropout=0.2),
+            nn.Tanh(),
 
-            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
+            nn.LSTM(64, 32, batch_first=True, dropout=0.2),
+            nn.Tanh(),
 
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
+            nn.LSTM(32,16, batch_first=True),
 
-            nn.Flatten(),   
+            nn.Flatten(),         
         )
-        self.classify = nn.Sequential(
-            #1
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Dropout(0.5),
 
-            #2
-            nn.Linear(32, 1),
-            nn.ReLU()
+        self.classify = nn.Sequential(
+
+
+            #1
+            nn.Linear(16 * 5, 16 * 5),
+            nn.ReLU(),
+            nn.Linear(16 * 5, 1),
+            
         )
 
     def forward(self, x):
-        features = self.feature(x)
+        lstm1_out, _ = self.feature[0](x)
+        tanh1_out = self.feature[1](lstm1_out)
+        lstm2_out, _ = self.feature[2](tanh1_out)
+        tanh2_out = self.feature[3](lstm2_out)
+        lstm3_out, _ = self.feature[4](tanh2_out)
+        flattened_out = self.feature[5](lstm3_out)
+        return self.classify(flattened_out)
 
-        return self.classify(features)
 
 
-
-classifier = CNN().to(device)
+classifier = LSTM().to(device)
 
 #data pipeline below
 

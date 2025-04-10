@@ -16,6 +16,11 @@ import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch import nn, Tensor
+from torch.nn.modules.transformer import TransformerEncoderLayer
+import torch.nn.functional as F
+
+
 
 import sys
 import os
@@ -40,53 +45,51 @@ else:
 
 
 #ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code/CNN/Outputs/"
+filepath = "Code/Transformer/SimpleTransformerOutputs/"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
     print(f"Directory '{filepath}' created successfully.")
 
-class CNN(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.feature = nn.Sequential(
-            nn.Conv1d(in_channels=5, out_channels=16, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(16),
-            nn.ReLU(),
+class PositionalEncoding(nn.Module):
+    def __init__(self, d_model, dropout=0.1, max_len=17028):
+        super(PositionalEncoding, self).__init__()
+        self.dropout = nn.Dropout(p=dropout)
 
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
+        pe = torch.zeros(max_len, d_model)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, d_model, 2).float() * (-np.log(10000.0) / d_model))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0).transpose(0, 1)
+        self.register_buffer('pe', pe)
 
-            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(32),
-            nn.ReLU(),
+    def forward(self, x: Tensor) -> Tensor:
+        #print(x.shape)
+        x = x + self.pe[:x.size(1), :, :]
+        #print(x.shape)
 
-            nn.MaxPool1d(kernel_size=2, stride=2),
-            nn.ReLU(),
+        return self.dropout(x)
+    
 
-            nn.Flatten(),   
-        )
-        self.classify = nn.Sequential(
-            #1
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Dropout(0.5),
+class TransformerModel(nn.Module):
+    def __init__(self, input_dim=15, d_model=64, nhead=4, num_layers=2, dropout=0.2):
+        super(TransformerModel, self).__init__()
 
-            #2
-            nn.Linear(32, 1),
-            nn.ReLU()
-        )
+        self.encoder = nn.Linear(input_dim, d_model)
+        self.pos_encoder = PositionalEncoding(d_model, dropout)
+        encoder_layers = nn.TransformerEncoderLayer(d_model, nhead)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers)
+        self.decoder = nn.Linear(d_model, 1)
 
     def forward(self, x):
-        features = self.feature(x)
+        x = self.encoder(x)
+        x = self.pos_encoder(x)
+        x = self.transformer_encoder(x)
+        x = self.decoder(x[:, -1, :])
+        return x
 
-        return self.classify(features)
-
-
-
-classifier = CNN().to(device)
+classifier = TransformerModel().to(device)
 
 #data pipeline below
 

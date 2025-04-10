@@ -4,9 +4,14 @@ from torch.utils.data import DataLoader, TensorDataset
 from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
+import os
 
 
 def TestingLoop(classifier, epochsRan, testloader, filepath, device, dataSplit, scaler_x):
+
+    if not os.path.exists(filepath):
+        os.makedirs(filepath, exist_ok=True)    
+        print(f"Directory '{filepath}' created successfully.")
 
     lossFunction = nn.MSELoss()
     epochs = epochsRan
