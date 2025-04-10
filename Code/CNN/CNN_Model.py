@@ -95,7 +95,7 @@ train_loader, val_loader, test_loader, ThreeDayMixed_loader, TwoDaySunny_loader,
 #training below
 
 
-history, epochsRan, TrainTime = TrainingLoop(classifier, epochs=3, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
+history, epochsRan, TrainTime = TrainingLoop(classifier, epochs=100, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
 
 
 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
