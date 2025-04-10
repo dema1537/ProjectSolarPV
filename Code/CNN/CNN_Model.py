@@ -111,46 +111,15 @@ Overall_cloud_cover, Overall_predictions, testTime = TestingLoop(classifier, epo
 
 #Evaluation of 3 day mixed
 ThreeDayMixedCloudCover, ThreeDayMixedPredictions, MixedTime = TestingLoop(classifier, epochsRan, testloader=ThreeDayMixed_loader, filepath=filepath + "DayGraphs/" + "Mixed/", device=device, dataSplit=xThreeDayMixed, scaler_x=scaler_x) 
-Evalutaion(ThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, history, filepath=filepath + "DayGraphs/" + "Mixed/", title="3 Days with Mixed Cloud COver")
+Evalutaion(ThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, history, filepath=filepath + "DayGraphs/" + "Mixed/", title="3 Days with Mixed Cloud Cover")
 
 #Evaluation of 3 day full
 ThreeDayFullCloudCover, ThreeDayFullPredictions, FullTime = TestingLoop(classifier, epochsRan, testloader=ThreeDayFull_loader, filepath=filepath + "DayGraphs/" + "Full/", device=device, dataSplit=xThreeDayFull, scaler_x=scaler_x) 
-Evalutaion(ThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, history, filepath=filepath + "DayGraphs/" + "Full/", title="3 Days with Full cloud cover")
+Evalutaion(ThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, history, filepath=filepath + "DayGraphs/" + "Full/", title="3 Days with Full Cloud Cover")
 
 #Evaluation of 2 day sunny
 TwoDaySunnyCloudCover, TwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan, testloader=TwoDaySunny_loader, filepath=filepath + "DayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
 Evalutaion(TwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, history, filepath=filepath + "DayGraphs/" + "Sunny/", title="2 Sunny Days")
-
-
-epochs_range = range(1, len(history["val_loss"]) + 1)
-plt.figure(figsize=(12, 4))
-
-plt.subplot(1, 3, 1)
-plt.plot(epochs_range, history["val_loss"], label="Val Loss")
-plt.plot(epochs_range, history["train_loss"], label="Train Loss")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.legend()
-plt.title("Training vs Validation Loss")
-
-plt.subplot(1, 3, 2)
-plt.plot(epochs_range, history["val_rmse"], label="Val RMSE")
-plt.plot(epochs_range, history["train_rmse"], label="Train RMSE")
-plt.xlabel("Epochs")
-plt.ylabel("RMSE")
-plt.legend()
-plt.title("Training vs Validation RMSE")
-
-plt.subplot(1, 3, 3)
-plt.plot(epochs_range, history["val_mape"], label="Val MAPE")
-plt.plot(epochs_range, history["train_mape"], label="Train MAPE")
-plt.xlabel("Epochs")
-plt.ylabel("MAPE")
-plt.legend()
-plt.title("Training vs Validation MAPE")
-
-
-plt.savefig(filepath + 'TrainingValidationGraphs.png')
 
 
 with open(filepath + "TimeInfo.txt", "w") as f:

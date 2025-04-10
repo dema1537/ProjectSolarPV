@@ -5,6 +5,9 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 import numpy as np
 import time
+import matplotlib.pyplot as plt
+import os
+
 
 
 
@@ -12,6 +15,9 @@ def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
 
     startTime = time.time()
 
+    if not os.path.exists(filepath):
+        os.makedirs(filepath, exist_ok=True)    
+        print(f"Directory '{filepath}' created successfully.")
 
     lossFunction = nn.MSELoss()
     optimiser = Adam(classifier.parameters(), lr=1e-4, weight_decay=1e-3)
@@ -134,5 +140,35 @@ def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
 
 
     endTime = time.time()
+
+    epochs_range = range(1, len(history["val_loss"]) + 1)
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(1, 3, 1)
+    plt.plot(epochs_range, history["val_loss"], label="Val Loss")
+    plt.plot(epochs_range, history["train_loss"], label="Train Loss")
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.title("Training vs Validation Loss")
+
+    plt.subplot(1, 3, 2)
+    plt.plot(epochs_range, history["val_rmse"], label="Val RMSE")
+    plt.plot(epochs_range, history["train_rmse"], label="Train RMSE")
+    plt.xlabel("Epochs")
+    plt.ylabel("RMSE")
+    plt.legend()
+    plt.title("Training vs Validation RMSE")
+
+    plt.subplot(1, 3, 3)
+    plt.plot(epochs_range, history["val_mape"], label="Val MAPE")
+    plt.plot(epochs_range, history["train_mape"], label="Train MAPE")
+    plt.xlabel("Epochs")
+    plt.ylabel("MAPE")
+    plt.legend()
+    plt.title("Training vs Validation MAPE")
+
+
+    plt.savefig(filepath + 'TrainingValidationGraphs.png')
 
     return history, epochs, endTime - startTime

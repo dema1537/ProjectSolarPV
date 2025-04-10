@@ -22,6 +22,17 @@ import os
 from io import StringIO
 
 import os
+import sys
+
+dir = "Code/"  
+
+if dir not in sys.path:
+    sys.path.append(dir)
+
+from TrainingLoop import TrainingLoop
+from TestingLoop import TestingLoop 
+from Evaluation import Evalutaion
+from TL_DataPipeline import TL_DataPipeline
 
 device = "cpu"
 epochRun = 20
@@ -203,6 +214,9 @@ filepath = "Code/CNN/Outputs/"
 # val_dataset = TensorDataset(x_val_tensor, y_val_tensor)
 # val_loader = DataLoader(val_dataset, batch_size=5, shuffle=False)
 
+
+
+train_loader, val_loader, test_loader, ThreeDayMixed_loader, TwoDaySunny_loader, ThreeDayFull_loader, scaler_y, scaler_x, ytest, xtest, xThreeDayMixed, yThreeDayMixed, xTwoDaySunny, yTwoDaySunny, xThreeDayFull, yThreeDayFull, cloud_cover = TL_DataPipeline()
 
 class CNN(nn.Module):
 
