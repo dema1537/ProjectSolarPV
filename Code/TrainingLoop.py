@@ -56,6 +56,9 @@ def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
             optimiser.zero_grad()  
             predictions = classifier(x_batch).flatten()  
 
+            # print("Predictions Shape:", predictions.shape)
+            # print("Target Shape:", y_batch.shape)
+
             loss = lossFunction(predictions, y_batch.flatten()) 
             loss.backward() 
             optimiser.step()

@@ -177,7 +177,7 @@ def TrainingDataPipeline():
     train_loader = DataLoader(train_dataset, batch_size=5, shuffle=True)
 
     test_dataset = TensorDataset(x_test_tensor, y_test_tensor)
-    test_loader = DataLoader(test_dataset, batch_size=5, shuffle=False)
+    test_loader = DataLoader(test_dataset, batch_size=5,  shuffle=False)
 
     val_dataset = TensorDataset(x_val_tensor, y_val_tensor)
     val_loader = DataLoader(val_dataset, batch_size=5, shuffle=False)

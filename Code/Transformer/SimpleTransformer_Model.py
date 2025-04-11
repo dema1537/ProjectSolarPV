@@ -97,7 +97,7 @@ train_loader, val_loader, test_loader, ThreeDayMixed_loader, TwoDaySunny_loader,
 
 #training below
 
-history, epochsRan, TrainTime = TrainingLoop(classifier, epochs=3, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
+history, epochsRan, TrainTime = TrainingLoop(classifier, epochs=100, trainLoader=train_loader, valLoader=val_loader, filepath=filepath, device=device)
 
 
 classifier.load_state_dict(torch.load(filepath + 'best_model.pth'))
@@ -124,35 +124,35 @@ TwoDaySunnyCloudCover, TwoDaySunnyPredictions, SunnyTime = TestingLoop(classifie
 Evalutaion(TwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, history, filepath=filepath + "DayGraphs/" + "Sunny/", title="2 Sunny Days")
 
 
-epochs_range = range(1, len(history["val_loss"]) + 1)
-plt.figure(figsize=(12, 4))
+# epochs_range = range(1, len(history["val_loss"]) + 1)
+# plt.figure(figsize=(12, 4))
 
-plt.subplot(1, 3, 1)
-plt.plot(epochs_range, history["val_loss"], label="Val Loss")
-plt.plot(epochs_range, history["train_loss"], label="Train Loss")
-plt.xlabel("Epochs")
-plt.ylabel("Loss")
-plt.legend()
-plt.title("Training vs Validation Loss")
+# plt.subplot(1, 3, 1)
+# plt.plot(epochs_range, history["val_loss"], label="Val Loss")
+# plt.plot(epochs_range, history["train_loss"], label="Train Loss")
+# plt.xlabel("Epochs")
+# plt.ylabel("Loss")
+# plt.legend()
+# plt.title("Training vs Validation Loss")
 
-plt.subplot(1, 3, 2)
-plt.plot(epochs_range, history["val_rmse"], label="Val RMSE")
-plt.plot(epochs_range, history["train_rmse"], label="Train RMSE")
-plt.xlabel("Epochs")
-plt.ylabel("RMSE")
-plt.legend()
-plt.title("Training vs Validation RMSE")
+# plt.subplot(1, 3, 2)
+# plt.plot(epochs_range, history["val_rmse"], label="Val RMSE")
+# plt.plot(epochs_range, history["train_rmse"], label="Train RMSE")
+# plt.xlabel("Epochs")
+# plt.ylabel("RMSE")
+# plt.legend()
+# plt.title("Training vs Validation RMSE")
 
-plt.subplot(1, 3, 3)
-plt.plot(epochs_range, history["val_mape"], label="Val MAPE")
-plt.plot(epochs_range, history["train_mape"], label="Train MAPE")
-plt.xlabel("Epochs")
-plt.ylabel("MAPE")
-plt.legend()
-plt.title("Training vs Validation MAPE")
+# plt.subplot(1, 3, 3)
+# plt.plot(epochs_range, history["val_mape"], label="Val MAPE")
+# plt.plot(epochs_range, history["train_mape"], label="Train MAPE")
+# plt.xlabel("Epochs")
+# plt.ylabel("MAPE")
+# plt.legend()
+# plt.title("Training vs Validation MAPE")
 
 
-plt.savefig(filepath + 'TrainingValidationGraphs.png')
+# plt.savefig(filepath + 'TrainingValidationGraphs.png')
 
 
 with open(filepath + "TimeInfo.txt", "w") as f:
