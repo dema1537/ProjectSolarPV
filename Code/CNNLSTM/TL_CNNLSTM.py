@@ -145,7 +145,7 @@ history, epochs, PretrainedFineTuneTime = TrainingLoop(newModel, epochs=FineTune
 newModel.load_state_dict(torch.load(filepath + "Pretrained/"+ 'best_model.pth'))
 
 
-_, _, PretrainedTestTime = TestingLoop(newModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+_, _, PretrainedTestTime = TestingLoop(newModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/", device=device, dataSplit=xtest, scaler_x=scaler_x) 
 
 
 _, TwoDaySunnyPredictions, SunnyTime = TestingLoop(newModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
@@ -164,7 +164,7 @@ oldrunModel.load_state_dict(torch.load(filepath + "NonPreTrained/" + 'best_model
 oldrunModel.eval()
 
 
-_, _, NontrainedTestTime = TestingLoop(oldrunModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "NonPretrained/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+_, _, NontrainedTestTime = TestingLoop(oldrunModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "NonPretrained/", device=device, dataSplit=xtest, scaler_x=scaler_x) 
 
 
 _, TwoDaySunnyPredictions, SunnyTime = TestingLoop(oldrunModel, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "NonPretrained/RealDayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
