@@ -1,0 +1,4 @@
+Test Loss: 0.000352
+Test RMSE: 0.0139
+Test MAPE: 1.00%
+Test epoch: 40.00
