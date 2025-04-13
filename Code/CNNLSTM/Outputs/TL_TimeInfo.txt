@@ -1,0 +1,5 @@
+PreTrain finetune Time: 70.348 secs
+Pretrain Test Time*: 0.373 secs
+NonPreTrain finetune Time: 53.574 secs
+NonPreTrain Test Time: 0.271 secs
+Sunny Time: 0.094 secs
