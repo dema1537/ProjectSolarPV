@@ -51,6 +51,7 @@ from TrainingLoop import TrainingLoop
 from TestingLoop import TestingLoop 
 from Evaluation import Evalutaion
 from TrainingDataPipeline import TrainingDataPipeline
+from TL_DataPipeline import TL_DataPipeline
 
 
 ###models####
@@ -508,3 +509,251 @@ plt.savefig(filepath + "Merged2DaySunGraph" + '.png')
 #plt.show()
 
 
+class newLSTM(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.feature = nn.Sequential(
+
+            nn.LSTM(54, 64, batch_first=True, dropout=0.2),
+            nn.Tanh(),
+
+            nn.LSTM(64, 32, batch_first=True, dropout=0.2),
+            nn.Tanh(),
+
+            nn.LSTM(32,16, batch_first=True),
+
+            nn.Flatten(),         
+        )
+
+        self.classify = nn.Sequential(
+
+
+            #1
+            nn.Linear(16 * 5, 16 * 5),
+            nn.ReLU(),
+            nn.Linear(16 * 5, 1),
+            
+        )
+
+    def forward(self, x):
+        lstm1_out, _ = self.feature[0](x)
+        tanh1_out = self.feature[1](lstm1_out)
+        lstm2_out, _ = self.feature[2](tanh1_out)
+        tanh2_out = self.feature[3](lstm2_out)
+        lstm3_out, _ = self.feature[4](tanh2_out)
+        flattened_out = self.feature[5](lstm3_out)
+        return self.classify(flattened_out)
+
+
+
+class newCNNLSTM(nn.Module):
+    def __init__(self, input_size, output_size,hidden_size,num_layers):
+        super(newCNNLSTM, self).__init__()
+
+        self.conv1 = nn.Conv1d(input_size, 64, kernel_size=2, stride=1)
+        self.conv2 = nn.Conv1d(64,32,kernel_size=1, stride = 1, padding=1)
+        self.batch1 =nn.BatchNorm1d(32)
+        self.conv3 = nn.Conv1d(32,32,kernel_size=1, stride = 1, padding=1)
+        self.batch2 =nn.BatchNorm1d(32)
+        self.LSTM = nn.LSTM(input_size=57, hidden_size=hidden_size,
+                            num_layers=num_layers, batch_first=True)
+        self.fc1 = nn.Linear(32*hidden_size, output_size)
+        #self.fc2 = nn.Linear(1, 1)
+        
+
+    def forward(self, x):
+        #in_size1 = x.size(0)  # one batch
+        x = F.selu(self.conv1(x))
+        x = self.conv2(x)
+        x = F.selu(self.batch1(x))
+        x = self.conv3(x)
+        x = F.selu(self.batch2(x))
+        x, h = self.LSTM(x) 
+        x = torch.reshape(x,(x.shape[0],x.shape[1]*x.shape[2]))
+        #in_size1 = x.size(0)  # one batch
+        #x = x.view(in_size1, -1)
+        # flatten the tensor x[:, -1, :]
+        x = self.fc1(x)
+        output = torch.sigmoid(x)
+        #output = self.fc2(x)
+
+    
+        
+        return output
+
+
+class newCNN(nn.Module):
+
+    def __init__(self):
+        super().__init__()
+        self.feature = nn.Sequential(
+
+            nn.Conv1d(in_channels=5, out_channels=16, kernel_size=3),
+            nn.Dropout(0.5),
+            nn.BatchNorm1d(16),
+            nn.ReLU(),
+
+            nn.MaxPool1d(kernel_size=2, stride=2),
+            nn.ReLU(),
+
+            nn.Conv1d(in_channels=16, out_channels=32, kernel_size=3),
+            nn.Dropout(0.5),
+            nn.BatchNorm1d(32),
+            nn.ReLU(),
+            nn.MaxPool1d(kernel_size=2, stride=2),
+            nn.ReLU(),
+
+            nn.Flatten(),
+        
+        )
+
+        Nchannels = self.feature(torch.empty(1, 5, 54)).size(-1)
+
+        self.classify = nn.Sequential(
+
+            #1
+            nn.Linear(int(Nchannels), 32),
+            nn.ReLU(),
+            nn.Dropout(0.5),
+
+            #2
+            nn.Linear(32, 1),
+            nn.ReLU()
+
+        )
+
+    def forward(self, x):
+        features = self.feature(x)
+
+        return self.classify(features)
+    
+
+train_loader, val_loader, test_loader, FullCloud_loader, TwoDaySunny_loader, scaler_y, scaler_x, ytest, xtest, xFullCloud, yFullCloud, xTwoDaySunny, yTwoDaySunny, cloud_cover, ytrain = TL_DataPipeline()
+
+FineTuneEpochs = 20
+epochs = 21
+
+classifier = newCNN().to(device)
+
+
+
+classifier.load_state_dict(torch.load("Code/CNN/Outputs/" + "Pretrained/"+ 'best_model.pth'))
+classifier.eval()
+
+_, CNNTwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(TwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", title="2 Sunny Days")
+
+_, CNNFullPredictions, CloudyTime = TestingLoop(classifier, epochsRan=epochs, testloader=FullCloud_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(FullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", title="3 Cloudy Days")
+
+classifier = newLSTM().to(device)
+
+
+
+classifier.load_state_dict(torch.load("Code/LSTM/Outputs/" + "Pretrained/"+ 'best_model.pth'))
+classifier.eval()
+
+_, LSTMTwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(TwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", title="2 Sunny Days")
+
+_, LSTMFullPredictions, CloudyTime = TestingLoop(classifier, epochsRan=epochs, testloader=FullCloud_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(FullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", title="3 Cloudy Days")
+
+
+classifier = newCNNLSTM(input_size=5, output_size=1,hidden_size=64, num_layers=3).to(device)
+
+
+classifier.load_state_dict(torch.load("Code/CNNLSTM/Outputs/" + "Pretrained/"+ 'best_model.pth'))
+classifier.eval()
+
+_, CNNLSTMTwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan=epochs, testloader=TwoDaySunny_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(TwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Sunny/", title="2 Sunny Days")
+
+_, CNNLSTMFullPredictions, CloudyTime = TestingLoop(classifier, epochsRan=epochs, testloader=FullCloud_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
+# Evalutaion(FullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", title="3 Cloudy Days")
+
+
+
+
+
+ytest = yTwoDaySunny
+
+
+CNNtest_predictions = scaler_y.inverse_transform(np.array(CNNTwoDaySunnyPredictions).reshape(-1, 1))
+LSTMtest_predictions = scaler_y.inverse_transform(np.array(LSTMTwoDaySunnyPredictions).reshape(-1, 1))
+CNNLSTMtest_predictions = scaler_y.inverse_transform(np.array(CNNLSTMTwoDaySunnyPredictions).reshape(-1, 1))
+
+
+
+
+fig, ax1 = plt.subplots(figsize=(12, 4))
+ax2 = ax1.twinx()
+
+
+
+
+ax2.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual', color='blue', lw=4)
+ax2.plot(CNNLSTMtest_predictions, label='CNNLSTM Predicted', color='orange', ls="--")
+ax2.plot(LSTMtest_predictions, label='LSTM Predicted', color='cyan', ls="--")
+ax2.plot(CNNtest_predictions, label='CNN Predicted', color='lightgreen', ls="--")
+ax2.set_ylabel("PV", color='blue') 
+ax2.tick_params(axis='y', labelcolor='blue')
+
+ax2.legend(loc='upper left')
+
+ax1.bar(range(len(cloud_cover[5:55])), cloud_cover[5:55], label='Cloud Cover', alpha=0.5, width=1.0)
+ax1.set_ylabel("Cloud Cover (%)")
+
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc='upper left')
+
+ax1.set_xlabel("Time Steps")
+
+plt.title("Actual and Predicted Values on Sunny Days for Baseline Models (Real World Data)")
+
+# ax1.set_xlim(75, 150)
+plt.savefig(filepath + "RealMerged2DaySunGraph" + '.png')
+
+
+
+
+ytest = yFullCloud
+
+
+CNNtest_predictions = scaler_y.inverse_transform(np.array(CNNFullPredictions).reshape(-1, 1))
+LSTMtest_predictions = scaler_y.inverse_transform(np.array(LSTMFullPredictions).reshape(-1, 1))
+CNNLSTMtest_predictions = scaler_y.inverse_transform(np.array(CNNLSTMFullPredictions).reshape(-1, 1))
+
+
+
+
+fig, ax1 = plt.subplots(figsize=(12, 4))
+ax2 = ax1.twinx()
+
+
+
+
+ax2.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual', color='blue', lw=4)
+ax2.plot(CNNtest_predictions, label='CNN Predicted', color='lightgreen', ls="--")
+ax2.plot(CNNLSTMtest_predictions, label='CNNLSTM Predicted', color='orange', ls="--")
+ax2.plot(LSTMtest_predictions, label='LSTM Predicted', color='cyan', ls="--")
+ax2.set_ylabel("PV", color='blue') 
+ax2.tick_params(axis='y', labelcolor='blue')
+
+ax2.legend(loc='upper left')
+
+ax1.bar(range(len(cloud_cover[230:300])), cloud_cover[230:300], label='Cloud Cover', alpha=0.5, width=1.0)
+ax1.set_ylabel("Cloud Cover (%)")
+
+lines, labels = ax1.get_legend_handles_labels()
+lines2, labels2 = ax2.get_legend_handles_labels()
+ax2.legend(lines + lines2, labels + labels2, loc='upper left')
+
+ax1.set_xlabel("Time Steps")
+
+plt.title("Actual and Predicted Values on Sunny Days for Baseline Models (Real World Data)")
+
+# ax1.set_xlim(75, 150)
+plt.savefig(filepath + "RealMergedCloudGraph" + '.png')
