@@ -44,8 +44,8 @@ else:
     print("CUDA is not available. Using CPU.")
 
 
-#ProjectSolarPV\Code\Transformer\ForecastingModel.py
-filepath = "Code/Transformer/ForecastingOutputs/"
+#ProjectSolarPV\Code\Transformer\FullEncoder.py
+filepath = "Code/Transformer/FullEncoderOutputs/"
 
 if not os.path.exists(filepath):
     os.makedirs(filepath, exist_ok=True)
@@ -72,7 +72,7 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 # A forcasting model
-class ForecastingModel(torch.nn.Module):
+class FullEncoder(torch.nn.Module):
     def __init__(self, 
                  seq_len=5,
                  embed_size = 16,
@@ -82,7 +82,8 @@ class ForecastingModel(torch.nn.Module):
                  conv1d_emb = True,
                  conv1d_kernel_size = 5,
                  device = "cpu"):
-        super(ForecastingModel, self).__init__()
+        super(FullEncoder
+    , self).__init__()
 
         # Set Class-level Parameters
         self.device = device
@@ -168,7 +169,7 @@ class ForecastingModel(torch.nn.Module):
 
 
 
-classifier = ForecastingModel().to(device)
+classifier = FullEncoder().to(device)
 
 #data pipeline below
 

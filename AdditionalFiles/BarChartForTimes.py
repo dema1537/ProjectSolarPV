@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-categories = ['CNN', 'CNN-LSTM', 'LSTM', 'Simple Transformer', 'Forecast Transformer']
+categories = ['CNN', 'CNN-LSTM', 'LSTM', 'Simple Transformer', 'Full Transformer']
 values = [1750.992, 3310.210 , 1808.551, 25143.434, 50427.230]
 
 colors = ['blue', 'green', 'red', 'purple', 'orange']
@@ -19,7 +19,7 @@ plt.savefig('AdditionalFiles/TrainingTimesGraph.png')
 
 
 
-categories = ['CNN', 'CNN-LSTM', 'LSTM', 'Simple Transformer', 'Forecast Transformer']
+categories = ['CNN', 'CNN-LSTM', 'LSTM', 'Simple Transformer', 'Full Transformer']
 values = [14.030, 14.591 , 4.212, 92.911, 119.423]
 
 colors = ['blue', 'green', 'red', 'purple', 'orange']
