@@ -753,7 +753,7 @@ ax2.legend(lines + lines2, labels + labels2, loc='upper left')
 
 ax1.set_xlabel("Time Steps")
 
-plt.title("Actual and Predicted Values on Sunny Days for Baseline Models (Real World Data)")
+plt.title("Actual and Predicted Values on Cloudy Days for Baseline Models (Real World Data)")
 
 # ax1.set_xlim(75, 150)
 plt.savefig(filepath + "RealMergedCloudGraph" + '.png')
