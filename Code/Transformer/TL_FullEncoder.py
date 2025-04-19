@@ -50,7 +50,7 @@ if torch.cuda.is_available():
 else:
     print("CUDA is not available. Using CPU.")
 
-filepath = "Code/Transformer/ForecastingOutputs/"
+filepath = "Code/Transformer/FullEncoderOutputs/"
 
 
 class PositionalEncoding(nn.Module):
