@@ -10,8 +10,8 @@ plt.figure(figsize=(9, 4))
 
 plt.bar(categories, values, color=colors)
 
-plt.xlabel('Models', fontweight='bold')
-plt.ylabel('Time training (seconds)', fontweight='bold')
+plt.xlabel('Models')
+plt.ylabel('Time training (seconds)')
 plt.title('Time to train each model')
 
 plt.tight_layout()
@@ -27,8 +27,8 @@ plt.figure(figsize=(9, 4))
 
 plt.bar(categories, values, color=colors)
 
-plt.xlabel('Models', fontweight='bold')
-plt.ylabel('Time training (seconds)', fontweight='bold')
+plt.xlabel('Models')
+plt.ylabel('Time training (seconds)')
 plt.title('Inference time for each model')
 
 plt.tight_layout()
