@@ -21,7 +21,7 @@ def TrainingLoop(classifier, epochs, trainLoader, valLoader, filepath, device):
 
     lossFunction = nn.MSELoss()
     optimiser = Adam(classifier.parameters(), lr=1e-4, weight_decay=1e-3)
-    scheduler = ReduceLROnPlateau(optimiser, 'min', factor=0.5, patience=3, verbose=True)
+    scheduler = ReduceLROnPlateau(optimiser, 'min', factor=0.5, patience=3)
 
     history = {
         'epoch': [],
