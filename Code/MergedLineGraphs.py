@@ -32,14 +32,15 @@ import os
 from torch.nn.modules.transformer import TransformerEncoderLayer
 import torch.nn.functional as F
 
-def ToGraph(predictions, cloud_cover, scaler_y, ytest, filepath, title):
+def ToGraph(Fullpredictions, cloud_cover, scaler_y, ytest, filepath, title, SimpPredictions):
 
 
     if not os.path.exists(filepath):
         os.makedirs(filepath, exist_ok=True)    
         print(f"Directory '{filepath}' created successfully.")
 
-    test_predictions = scaler_y.inverse_transform(np.array(predictions).reshape(-1, 1))
+    Full_test_predictions = scaler_y.inverse_transform(np.array(Fullpredictions).reshape(-1, 1))
+    Simp_test_predictions = scaler_y.inverse_transform(np.array(SimpPredictions).reshape(-1, 1))
 
     fig, ax2 = plt.subplots()
     ax1 = ax2.twinx()
@@ -48,8 +49,9 @@ def ToGraph(predictions, cloud_cover, scaler_y, ytest, filepath, title):
     ax1.set_ylabel("Cloud Cover (%)")
 
 
-    ax2.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual', color='blue')
-    ax2.plot(test_predictions, label='Predicted', color='orange')
+    ax2.plot(scaler_y.inverse_transform(ytest.reshape(-1, 1)).flatten(), label='Actual', color='green', lw=4)
+    ax2.plot(Full_test_predictions, label='Full Encoder Predictions', color='red', ls="--")
+    ax2.plot(Simp_test_predictions, label='Simple Encoder Predictions', color='blue', ls="--")
     ax2.set_ylabel("PV (kWh)", color='blue') 
     ax2.tick_params(axis='y', labelcolor='blue')
 
@@ -574,9 +576,9 @@ TwoDaySunnyCloudCover, FullEncoderTwoDaySunnyPredictions, SunnyTime = TestingLoo
 
 
 
-ToGraph(FullEncoderThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, filepath + "Mixed/", "Full Transformer Encoder (Mixed Clouds)")
-ToGraph(FullEncoderThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, filepath + "Full/", "Full Transformer Encoder (Full Clouds)")
-ToGraph(FullEncoderTwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, filepath + "Sunny/", "Full Transformer Encoder (Sunny)")
+# ToGraph(FullEncoderThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, filepath + "Mixed/", "Full Transformer Encoder (Mixed Clouds)")
+# ToGraph(FullEncoderThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, filepath + "Full/", "Full Transformer Encoder (Full Clouds)")
+# ToGraph(FullEncoderTwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, filepath + "Sunny/", "Full Transformer Encoder (Sunny)")
 
 
 
@@ -603,10 +605,16 @@ TwoDaySunnyCloudCover, SimpEncoderTwoDaySunnyPredictions, SunnyTime = TestingLoo
 #predictions, cloud_cover, scaler_y, ytest, filepath, title
 
 
+ToGraph(FullEncoderThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, filepath + "Mixed/", "Transformer predictions (Mixed Clouds)", SimpEncoderThreeDayMixedPredictions)
+ToGraph(FullEncoderThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, filepath + "Full/", "Transformer predictions (Full Clouds)", SimpEncoderThreeDayFullPredictions)
+ToGraph(FullEncoderTwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, filepath + "Sunny/", "Transformer predictions (Sunny)", SimpEncoderTwoDaySunnyPredictions)
 
-ToGraph(SimpEncoderThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, filepath + "Mixed/", "Simplified Encoder (Mixed clouds)")
-ToGraph(SimpEncoderThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, filepath + "Full/", "Simplified Encoder (Full clouds)")
-ToGraph(SimpEncoderTwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, filepath + "Sunny/", "Simplified Encoder (Sunny)")
+
+
+
+# ToGraph(SimpEncoderThreeDayMixedPredictions, ThreeDayMixedCloudCover, scaler_y, yThreeDayMixed, filepath + "Mixed/", "Simplified Encoder (Mixed clouds)")
+# ToGraph(SimpEncoderThreeDayFullPredictions, ThreeDayFullCloudCover, scaler_y, yThreeDayFull, filepath + "Full/", "Simplified Encoder (Full clouds)")
+# ToGraph(SimpEncoderTwoDaySunnyPredictions, TwoDaySunnyCloudCover, scaler_y, yTwoDaySunny, filepath + "Sunny/", "Simplified Encoder (Sunny)")
 
 
 
@@ -991,8 +999,8 @@ _, FullEncoderTwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochs
 _, FullEncoderFullPredictions, CloudyTime = TestingLoop(classifier, epochsRan=epochs, testloader=FullCloud_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
 # Evalutaion(FullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", title="3 Cloudy Days")
 
-ToGraph(FullEncoderFullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, filepath + "Full/", "Full Transformer Encoder (Real Cloudy Data)")
-ToGraph(FullEncoderTwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, filepath + "Sunny/", "Full Transformer Encoder (Real Sunny Data)")
+# ToGraph(FullEncoderFullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, filepath + "Full/", "Full Transformer Encoder (Real Cloudy Data)")
+# ToGraph(FullEncoderTwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, filepath + "Sunny/", "Full Transformer Encoder (Real Sunny Data)")
 
 
 classifier = newTransformerModel().to(device)
@@ -1007,8 +1015,12 @@ _, SimpleTwoDaySunnyPredictions, SunnyTime = TestingLoop(classifier, epochsRan=e
 _, SimpleFullPredictions, CloudyTime = TestingLoop(classifier, epochsRan=epochs, testloader=FullCloud_loader, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", device=device, dataSplit=xTwoDaySunny, scaler_x=scaler_x) 
 # Evalutaion(FullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, history, filepath=filepath + "Pretrained/RealDayGraphs/" + "Cloud/", title="3 Cloudy Days")
 
-ToGraph(SimpleFullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, filepath + "Full/", "Simplified Encoder (Real Cloudy Data)")
-ToGraph(SimpleTwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, filepath + "Sunny/", "Simplified Encoder (Real Sunny Data)")
+ToGraph(FullEncoderFullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, filepath + "Full/", "Transformer predictions (Real Cloudy Data)", SimpleFullPredictions)
+ToGraph(FullEncoderTwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, filepath + "Sunny/", "Transformer predictions (Real Sunny Data)", SimpleTwoDaySunnyPredictions)
+
+
+# ToGraph(SimpleFullPredictions, cloud_cover[230:300], scaler_y, yFullCloud, filepath + "Full/", "Simplified Encoder (Real Cloudy Data)")
+# ToGraph(SimpleTwoDaySunnyPredictions, cloud_cover[5:55], scaler_y, yTwoDaySunny, filepath + "Sunny/", "Simplified Encoder (Real Sunny Data)")
 
 
 classifier = newCNN().to(device)
